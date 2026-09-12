@@ -6,8 +6,12 @@
 %option never-interactive
 
 %%
-"int"         { std::cout << "Data type: " << yytext << '\n'; }
-
+"int"                   { std::cout << "Data type: " << yytext << '\n'; }
+";"                     { std::cout << "Keyword: " << yytext << '\n'; }
+"="                     { std::cout << "Operator: " << yytext << '\n'; }
+[0-9]+                     { std::cout << "Literal digit: " << yytext << '\n'; }
+[A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
+[ \t\n\r]+              { /* ignored*/ }
 
 %%
 /* --- СЕКЦИЯ 3: ПОЛЬЗОВАТЕЛЬСКИЙ КОД (MAIN) --- */
