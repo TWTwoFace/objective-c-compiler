@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FLEX_BIN="./tools/flex.exe"
-GPP_BIN="/c/mingw64/bin/g++.exe" 
+GPP_BIN="/c/msys64/mingw64/bin/g++.exe"
 
 "$FLEX_BIN" -o lexer.cpp lexer.l
 "$GPP_BIN" lexer.cpp -o my_scanner.exe
