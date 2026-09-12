@@ -1,14 +1,67 @@
 %{
 #include <iostream>
+
+void print_operator(const char* text) {
+    std::cout << "Operator: " << text << '\n';
+}
+
+void print_keyword(const char* text) {
+    std::cout << "Keyword: " << text << '\n';
+}
 %}
 
 %option noyywrap
 %option never-interactive
 
 %%
+"+"                     { print_operator(yytext); }
+"-"                     { print_operator(yytext); }
+"*"                     { print_operator(yytext); }
+"/"                     { print_operator(yytext); }
+"%"                     { print_operator(yytext); }
+"++"                    { print_operator(yytext); }
+"--"                    { print_operator(yytext); }
+
+"=="                    { print_operator(yytext); }
+"!="                    { print_operator(yytext); }
+"<"                     { print_operator(yytext); }
+">"                     { print_operator(yytext); }
+"<="                    { print_operator(yytext); }
+">="                    { print_operator(yytext); }
+
+"&&"                    { print_operator(yytext); }
+"||"                    { print_operator(yytext); }
+"!"                     { print_operator(yytext); }
+
+"&"                     { print_operator(yytext); }
+"|"                     { print_operator(yytext); }
+"^"                     { print_operator(yytext); }
+"~"                     { print_operator(yytext); }
+"<<"                    { print_operator(yytext); }
+">>"                    { print_operator(yytext); }
+
+"="                     { print_operator(yytext); }
+"+="                    { print_operator(yytext); }
+"-="                    { print_operator(yytext); }
+"*="                    { print_operator(yytext); }
+"/="                    { print_operator(yytext); }
+"%="                    { print_operator(yytext); }
+"&="                    { print_operator(yytext); }
+"|="                    { print_operator(yytext); }
+"^="                    { print_operator(yytext); }
+"<<="                   { print_operator(yytext); }
+">>="                   { print_operator(yytext); }
+
+"."                     { print_operator(yytext); }
+"->"                    { print_operator(yytext); }
+
+"?"                     { print_operator(yytext); }
+":"                     { print_operator(yytext); }
+
+
+"while"                 { std::cout << "Keyword: " << yytext << '\n'; }
 "int"                   { std::cout << "Data type: " << yytext << '\n'; }
 ";"                     { std::cout << "Keyword: " << yytext << '\n'; }
-"="                     { std::cout << "Operator: " << yytext << '\n'; }
 [0-9]+                  { std::cout << "Literal digit: " << yytext << '\n'; }
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 [ \t\n\r]+              { /* ignored*/ }
