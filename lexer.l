@@ -58,7 +58,8 @@ void print_keyword(const char* text) {
 "?"                     { print_operator(yytext); }
 ":"                     { print_operator(yytext); }
 
-[0-9]*\.[0-9]+          { std::cout << "Double literal: " << yytext << '\n'; }
+[0-9]*\.[0-9]+[Dd]?     { std::cout << "Double literal: " << yytext << '\n'; }
+[0-9]*\.[0-9]+[lL]      { std::cout << "Long double literal: " << yytext << '\n'; }
 [0-9]*\.[0-9]+f         { std::cout << "Float literal: " << yytext << '\n'; }
 
 "while"                 { std::cout << "Keyword: " << yytext << '\n'; }
