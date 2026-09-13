@@ -32,6 +32,19 @@ std::string string_buffer;
 
 %%
 
+"#"                     { std::cout << "Marker: " << yytext << '\n'; }
+
+"["                     { std::cout << "Punctuator: " << yytext << '\n'; }
+"]"                     { std::cout << "Punctuator: " << yytext << '\n'; }
+"{"                     { std::cout << "Punctuator: " << yytext << '\n'; }
+"}"                     { std::cout << "Punctuator: " << yytext << '\n'; }
+"("                     { std::cout << "Punctuator: " << yytext << '\n'; }
+")"                     { std::cout << "Punctuator: " << yytext << '\n'; }
+
+","                     { std::cout << "Separator: " << yytext << '\n'; }
+":"                     { std::cout << "Separator: " << yytext << '\n'; }
+";"                     { std::cout << "Semicolon: " << yytext << '\n'; }
+
 "+"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
 "-"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
 "*"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
@@ -74,7 +87,6 @@ std::string string_buffer;
 "->"                    { std::cout << "Operator (member): " << yytext << '\n'; }
 
 "?"                     { std::cout << "Operator: " << yytext << '\n'; }
-":"                     { std::cout << "Operator: " << yytext << '\n'; }
 
 "id"                    {std::cout << "Identifier: " << yytext << '\n'; }
 "Class"                 {std::cout << "Identifier: " << yytext << '\n'; }
@@ -130,8 +142,6 @@ std::string string_buffer;
 "void"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "volatile"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
-
-";"                     { std::cout << "Semicolon: " << yytext << '\n'; }
 
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 
