@@ -11,6 +11,8 @@ void print_keyword(const char* text) {
 }
 %}
 
+%x STRING_C
+
 %option noyywrap
 %option never-interactive
 
@@ -58,10 +60,6 @@ void print_keyword(const char* text) {
 
 "?"                     { print_operator(yytext); }
 ":"                     { print_operator(yytext); }
-
-[0-9]*\.[0-9]+[Dd]?     { std::cout << "Double literal: " << std::stod(yytext) << '\n'; }
-[0-9]*\.[0-9]+[lL]      { std::cout << "Long double literal: " << std::stold(yytext) << '\n'; }
-[0-9]*\.[0-9]+[fF]      { std::cout << "Float literal: " << std::stof(yytext) << '\n'; }
 
 "id"                    {std::cout << "Identifier: " << yytext << '\n'; }
 "Class"                 {std::cout << "Identifier: " << yytext << '\n'; }
@@ -119,28 +117,60 @@ void print_keyword(const char* text) {
 "while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 
 ";"                     { std::cout << "Semicolon: " << yytext << '\n'; }
-0|[1-9][0-9]*           { std::cout << "Literal digit: " << yytext << '\n'; }
-[A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << std::stoi(yytext) << '\n'; }
+
+[A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
+
+[0-9]*\.[0-9]+[Dd]?     { 
+    try {
+        std::cout << "Double literal: " << std::stod(yytext) << '\n';
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid double literal" << '\n';
+    }
+}
+[0-9]*\.[0-9]+[lL]      { 
+    try {
+        std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid long double literal" << '\n';
+    }
+}
+[0-9]*\.[0-9]+[fF]      { 
+    try {
+        std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid float literal" << '\n';
+    }
+}
+0|[1-9][0-9]*           { 
+    // it can be long long | short | other digit literals ?
+    try { 
+        std::cout << "Literal digit: " << std::stoi(yytext) << '\n'; 
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid integer literal" << '\n';
+    }
+}
+
 [ \t\n\r]+              { /* ignored*/ }
 
 %%
-/* --- СЕКЦИЯ 3: ПОЛЬЗОВАТЕЛЬСКИЙ КОД (MAIN) --- */
-int main() {
-    /* yyin - это специальная переменная flex, откуда он читает текст */
+int main(int argc, char* argv[]) {
     extern FILE* yyin; 
 
-    /* Открываем наш файл test.cs и кладем его в yyin */
-    yyin = fopen("code.m", "r"); 
+    if (argc < 2)
+    {
+        std::cerr << "Missing command line argument (source file path)" << '\n';
+        return 1;
+    } 
+    
+    yyin = fopen(argv[1], "r"); 
 
     if (!yyin) {
-        std::cout << "Не удалось открыть файл code.m!\n";
+        std::cout << "File was not found!\n";
         return 1;
     }
 
-    /* Запускаем главную функцию анализатора, которую для нас сгенерирует flex */
     yylex(); 
 
-    /* Закрываем файл */
     fclose(yyin);
     return 0;
 }

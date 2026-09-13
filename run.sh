@@ -8,7 +8,7 @@ export PATH="/c/msys64/mingw64/bin:$PATH"
 "$FLEX_BIN" -o lexer.cpp lexer.l
 "$GPP_BIN" lexer.cpp -o my_scanner.exe
 
-./my_scanner.exe > result.txt
+./my_scanner.exe code.m > result.txt
 
 echo "Done"
 start notepad result.txt
