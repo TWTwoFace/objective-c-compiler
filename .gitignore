@@ -3,3 +3,4 @@
 *.cpp
 *.exe
 result.txt
+errors.txt
