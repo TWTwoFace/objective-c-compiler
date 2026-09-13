@@ -177,6 +177,14 @@ std::string string_buffer;
     }
 }
 
+[0-9]+\.[0-9]*[lL]      { 
+    try {
+        std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid long double literal in line: " << line << '\n';
+    }
+}
+
 [0-9]*\.[0-9]+[fF]      { 
     try {
         std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
@@ -185,7 +193,23 @@ std::string string_buffer;
     }
 }
 
+[0-9]+\.[0-9]*[fF]      { 
+    try {
+        std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid float literal in line: " << line << '\n';
+    }
+}
+
 [0-9]*\.[0-9]+     { 
+    try {
+        std::cout << "Double literal: " << std::stod(yytext) << '\n';
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid double literal in line: " << line << '\n';
+    }
+}
+
+[0-9]+\.[0-9]*     { 
     try {
         std::cout << "Double literal: " << std::stod(yytext) << '\n';
     } catch (const std::invalid_argument& e) {
