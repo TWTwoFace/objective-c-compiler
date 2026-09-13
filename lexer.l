@@ -143,6 +143,31 @@ std::string string_buffer;
 "volatile"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 
+"@interface"            {std::cout << "Directive: " << yytext << '\n'; }
+"@implementation"       {std::cout << "Directive: " << yytext << '\n'; }
+"@protocol"             {std::cout << "Directive: " << yytext << '\n'; }
+"@end"                  {std::cout << "Directive: " << yytext << '\n'; }
+"@class"                {std::cout << "Directive: " << yytext << '\n'; }
+"@public"               {std::cout << "Directive: " << yytext << '\n'; }
+"@protected"            {std::cout << "Directive: " << yytext << '\n'; }
+"@private"              {std::cout << "Directive: " << yytext << '\n'; }
+"@package"              {std::cout << "Directive: " << yytext << '\n'; }
+"@property"             {std::cout << "Directive: " << yytext << '\n'; }
+"@synthesize"           {std::cout << "Directive: " << yytext << '\n'; }
+"@dynamic"              {std::cout << "Directive: " << yytext << '\n'; }
+"@selector"             {std::cout << "Directive: " << yytext << '\n'; }
+"@encode"               {std::cout << "Directive: " << yytext << '\n'; }
+"@try"                  {std::cout << "Directive: " << yytext << '\n'; }
+"@catch"                {std::cout << "Directive: " << yytext << '\n'; }
+"@finally"              {std::cout << "Directive: " << yytext << '\n'; }
+"@throw"                {std::cout << "Directive: " << yytext << '\n'; }
+"@optional"             {std::cout << "Directive: " << yytext << '\n'; }
+"@required"             {std::cout << "Directive: " << yytext << '\n'; }
+"@synchronized"         {std::cout << "Directive: " << yytext << '\n'; }
+"@autoreleasepool"      {std::cout << "Directive: " << yytext << '\n'; }
+"@import"               {std::cout << "Directive: " << yytext << '\n'; }
+"@"                     {std::cout << "Directive at: " << yytext << '\n'; }
+
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 
 [0-9]*\.[0-9]+[Dd]?     { 
@@ -279,7 +304,11 @@ std::string string_buffer;
 
 \/\* { BEGIN(MULTILINE_COMMENT); }
 <MULTILINE_COMMENT>\*\/ { BEGIN(INITIAL); }
-<MULTILINE_COMMENT>.* { /* ignored */ }
+<MULTILINE_COMMENT>. { /* ignored */ }
+<MULTILINE_COMMENT><<EOF>> { 
+    std::cerr << "error: multiline comment was not closed\n"; 
+    BEGIN(INITIAL);
+}
 
 \/{2}.* { /* ignored*/ }
 
