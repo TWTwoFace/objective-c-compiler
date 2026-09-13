@@ -30,6 +30,7 @@ std::string string_buffer;
 %option never-interactive
 
 %%
+
 "+"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
 "-"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
 "*"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
@@ -264,6 +265,8 @@ std::string string_buffer;
     std::cerr << "error: unclosed quote in string\n";
     BEGIN(INITIAL);
 }
+
+\/{2}.* { /* ignored*/ }
 
 [ \t\n\r]+              { /* ignored*/ }
 
