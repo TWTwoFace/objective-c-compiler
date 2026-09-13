@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdlib>
 #include <stdio.h>
+#include <errno.h>
 
 static void append_utf8(std::string &str, unsigned int code) {
     if (code < 0x80) {
@@ -17,7 +18,7 @@ static void append_utf8(std::string &str, unsigned int code) {
         str += static_cast<char>(0x80 | (code & 0x3F));
     }
 }
-
+int line = 1;
 std::string string_buffer;
 
 %}
@@ -31,8 +32,6 @@ std::string string_buffer;
 %option never-interactive
 
 %%
-
-"#"                     { std::cout << "Marker: " << yytext << '\n'; }
 
 "["                     { std::cout << "Punctuator: " << yytext << '\n'; }
 "]"                     { std::cout << "Punctuator: " << yytext << '\n'; }
@@ -170,35 +169,114 @@ std::string string_buffer;
 
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 
-[0-9]*\.[0-9]+[Dd]?     { 
-    try {
-        std::cout << "Double literal: " << std::stod(yytext) << '\n';
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid double literal\n";
-    }
-}
 [0-9]*\.[0-9]+[lL]      { 
     try {
         std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid long double literal\n";
+        std::cerr << "error: invalid long double literal in line: " << line << '\n';
     }
 }
+
 [0-9]*\.[0-9]+[fF]      { 
     try {
         std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid float literal\n";
+        std::cerr << "error: invalid float literal in line: " << line << '\n';
     }
 }
-0|[1-9][0-9]*           { 
-    // it can be long long | short | other digit literals ?
-    try { 
-        std::cout << "Literal digit: " << std::stoi(yytext) << '\n'; 
+
+[0-9]*\.[0-9]+     { 
+    try {
+        std::cout << "Double literal: " << std::stod(yytext) << '\n';
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid integer literal\n";
+        std::cerr << "error: invalid double literal in line: " << line << '\n';
     }
 }
+
+(0|[1-9][0-9]*)([uU][lL]{2}|[lL]{2}[uU])     { 
+    errno = 0;
+
+    char* endptr;
+
+    auto val = std::strtoull(yytext, &endptr, 10);
+    if(yytext == endptr) {
+        std::cerr << "error: literal is not a number in line: " << line << '\n';
+    } else if (errno == ERANGE) {
+        std::cerr << "error: literal out of range in line: " << line << '\n';
+    } else {
+        std::cout << "Literal unsigned long long integer: " << val << '\n'; 
+    }
+}
+
+
+0|[1-9][0-9]*([uU][lL]|[lL][uU])      { 
+    errno = 0;
+
+    char* endptr;
+
+    auto val = std::strtoul(yytext, &endptr, 10);
+    if(yytext == endptr) {
+        std::cerr << "error: literal is not a number in line: " << line << '\n';
+    } else if (errno == ERANGE) {
+        std::cerr << "error: literal out of range in line: " << line << '\n';
+    } else {
+        std::cout << "Literal unsigned long integer: " << val << '\n'; 
+    }
+}
+
+0|[1-9][0-9]*[lL][lL]       { 
+    errno = 0;
+
+    char* endptr;
+
+    auto val = std::strtoll(yytext, &endptr, 10);
+    if(yytext == endptr) {
+        std::cerr << "error: literal is not a number in line: " << line << '\n';
+    } else if (errno == ERANGE) {
+        std::cerr << "error: literal out of range in line: " << line << '\n';
+    } else {
+        std::cout << "Literal long long integer: " << val << '\n'; 
+    }
+}
+
+0|[1-9][0-9]*[lL]       { 
+    errno = 0;
+
+    char* endptr;
+
+    auto val = std::strtol(yytext, &endptr, 10);
+    if(yytext == endptr) {
+        std::cerr << "error: literal is not a number in line: " << line << '\n';
+    } else if (errno == ERANGE) {
+        std::cerr << "error: literal out of range in line: " << line << '\n';
+    } else {
+        std::cout << "Literal long integer: " << val << '\n'; 
+    }
+}
+
+0|[1-9][0-9]*[uU]       { 
+    errno = 0;
+
+    char* endptr;
+
+    auto val = std::strtoul(yytext, &endptr, 10);
+    if(yytext == endptr) {
+        std::cerr << "error: literal is not a number in line: " << line << '\n';
+    } else if (errno == ERANGE) {
+        std::cerr << "error: literal out of range in line: " << line << '\n';
+    } else {
+        std::cout << "Literal unsigned integer: " << val << '\n'; 
+    }
+}
+
+0|[1-9][0-9]*           { 
+    try { 
+        std::cout << "Literal integer: " << std::stoi(yytext) << '\n'; 
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "error: invalid integer literal in line: " << line << '\n';
+    }
+}
+
 
 \x22                    {
     //"
@@ -269,7 +347,8 @@ std::string string_buffer;
 <STRING_C,CHAR_C,STRING_NS>\\\n          { /* ignored */ }
 
 <STRING_C,CHAR_C,STRING_NS>\n            { 
-    std::cerr << "error: EOL in string"; 
+    std::cerr << "error: EOL in string in line: " << line << '\n'; 
+    line++;
     BEGIN(INITIAL);
 }
 
@@ -289,7 +368,7 @@ std::string string_buffer;
 
 <CHAR_C>\x27            {
     if (string_buffer.size() > 1) {
-        std::cerr << "error: char size could be less than 1\n";
+        std::cerr << "error: char size could be less than 1 in line: " << line << '\n';
     }
     else {
         std::cout << "CChar literal: " << string_buffer << '\n';
@@ -298,7 +377,7 @@ std::string string_buffer;
 }
 
 <STRING_C,CHAR_C,STRING_NS><<EOF>>       {
-    std::cerr << "error: unclosed quote in string\n";
+    std::cerr << "error: unclosed quote in string in line: " << line << '\n';
     BEGIN(INITIAL);
 }
 
@@ -306,13 +385,14 @@ std::string string_buffer;
 <MULTILINE_COMMENT>\*\/ { BEGIN(INITIAL); }
 <MULTILINE_COMMENT>. { /* ignored */ }
 <MULTILINE_COMMENT><<EOF>> { 
-    std::cerr << "error: multiline comment was not closed\n"; 
+    std::cerr << "error: multiline comment was not closed in line: " << line << '\n'; 
     BEGIN(INITIAL);
 }
 
-\/{2}.* { /* ignored*/ }
+\/{2}.*         { /* ignored*/ }
 
-<*>[ \t\n\r]+              { /* ignored*/ }
+<*>\n           { line++; }          
+<*>[ \t\r]+     { /* ignored*/ }
 
 %%
 int main(int argc, char* argv[]) {
