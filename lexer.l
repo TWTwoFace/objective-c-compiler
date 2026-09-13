@@ -65,7 +65,7 @@ void print_keyword(const char* text) {
 "while"                 { std::cout << "Keyword: " << yytext << '\n'; }
 "int"                   { std::cout << "Data type: " << yytext << '\n'; }
 ";"                     { std::cout << "Keyword: " << yytext << '\n'; }
-[0-9]+                  { std::cout << "Literal digit: " << yytext << '\n'; }
+0|[1-9][0-9]*           { std::cout << "Literal digit: " << yytext << '\n'; }
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 [ \t\n\r]+              { /* ignored*/ }
 
