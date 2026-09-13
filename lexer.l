@@ -25,6 +25,7 @@ std::string string_buffer;
 %x STRING_C
 %x CHAR_C
 %x STRING_NS
+%x MULTILINE_COMMENT
 
 %option noyywrap
 %option never-interactive
@@ -266,9 +267,13 @@ std::string string_buffer;
     BEGIN(INITIAL);
 }
 
+\/\* { BEGIN(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT>\*\/ { BEGIN(INITIAL); }
+<MULTILINE_COMMENT>.* { /* ignored */ }
+
 \/{2}.* { /* ignored*/ }
 
-[ \t\n\r]+              { /* ignored*/ }
+<*>[ \t\n\r]+              { /* ignored*/ }
 
 %%
 int main(int argc, char* argv[]) {
