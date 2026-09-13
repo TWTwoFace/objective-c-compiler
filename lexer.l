@@ -1,14 +1,15 @@
 %{
 #include <iostream>
+#include <cstring>
 #include <string>
+#include <cstdlib>
 
 void print_operator(const char* text) {
     std::cout << "Operator: " << text << '\n';
 }
 
-void print_keyword(const char* text) {
-    std::cout << "Keyword: " << text << '\n';
-}
+std::string string_buffer;
+
 %}
 
 %x STRING_C
@@ -124,21 +125,21 @@ void print_keyword(const char* text) {
     try {
         std::cout << "Double literal: " << std::stod(yytext) << '\n';
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid double literal" << '\n';
+        std::cerr << "error: invalid double literal\n";
     }
 }
 [0-9]*\.[0-9]+[lL]      { 
     try {
         std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid long double literal" << '\n';
+        std::cerr << "error: invalid long double literal\n";
     }
 }
 [0-9]*\.[0-9]+[fF]      { 
     try {
         std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid float literal" << '\n';
+        std::cerr << "error: invalid float literal\n";
     }
 }
 0|[1-9][0-9]*           { 
@@ -146,8 +147,55 @@ void print_keyword(const char* text) {
     try { 
         std::cout << "Literal digit: " << std::stoi(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid integer literal" << '\n';
+        std::cerr << "error: invalid integer literal\n";
     }
+}
+
+\x22                    {
+    //"
+    BEGIN(STRING_C);
+    string_buffer.clear();
+}
+
+<STRING_C>[^\\\x22\n]+  {
+    string_buffer += yytext;
+}
+
+<STRING_C>\\n           { string_buffer += '\n'; }
+<STRING_C>\\t           { string_buffer += '\t'; }
+<STRING_C>\\r           { string_buffer += '\r'; }
+<STRING_C>\\\\          { string_buffer += '\\'; }
+<STRING_C>\\\x22        { 
+    // \"
+    string_buffer += '"'; 
+}
+<STRING_C>\\\x27        { 
+    // \'
+    string_buffer += '\''; 
+}
+
+<STRING_C>\\[0-7]{1,3}  { 
+    long code = strtol(yytext + 1, nullptr, 8);
+    string_buffer += static_cast<char>(code);
+}
+
+<STRING_C>\\\n          { /* ignored */ }
+
+<STRING_C>\n            { 
+    std::cerr << "error: EOL in string"; 
+    BEGIN(INITIAL);
+}
+
+<STRING_C>\x22          {
+    // "
+    std::cout << ">>> CString literal:\n" << string_buffer << '\n';
+    std::cout << "<<< CString ended" << '\n';
+    BEGIN(INITIAL);
+}
+
+<STRING_C><<EOF>>       {
+    std::cerr << "error: unclosed quote in string\n";
+    BEGIN(INITIAL);
 }
 
 [ \t\n\r]+              { /* ignored*/ }
@@ -158,7 +206,7 @@ int main(int argc, char* argv[]) {
 
     if (argc < 2)
     {
-        std::cerr << "Missing command line argument (source file path)" << '\n';
+        std::cerr << "Missing command line argument (source file path)\n";
         return 1;
     } 
     
