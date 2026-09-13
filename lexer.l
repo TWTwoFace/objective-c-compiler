@@ -3,9 +3,19 @@
 #include <cstring>
 #include <string>
 #include <cstdlib>
+#include <stdio.h>
 
-void print_operator(const char* text) {
-    std::cout << "Operator: " << text << '\n';
+static void append_utf8(std::string &str, unsigned int code) {
+    if (code < 0x80) {
+        str += static_cast<char>(code);
+    } else if (code < 0x800) {
+        str += static_cast<char>(0xC0 | (code >> 6));
+        str += static_cast<char>(0x80 | (code & 0x3F));
+    } else {
+        str += static_cast<char>(0xE0 | (code >> 12));
+        str += static_cast<char>(0x80 | ((code >> 6) & 0x3F));
+        str += static_cast<char>(0x80 | (code & 0x3F));
+    }
 }
 
 std::string string_buffer;
@@ -13,54 +23,56 @@ std::string string_buffer;
 %}
 
 %x STRING_C
+%x CHAR_C
+%x STRING_NS
 
 %option noyywrap
 %option never-interactive
 
 %%
-"+"                     { print_operator(yytext); }
-"-"                     { print_operator(yytext); }
-"*"                     { print_operator(yytext); }
-"/"                     { print_operator(yytext); }
-"%"                     { print_operator(yytext); }
-"++"                    { print_operator(yytext); }
-"--"                    { print_operator(yytext); }
+"+"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
+"-"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
+"*"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
+"/"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
+"%"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
+"++"                    { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
+"--"                    { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
 
-"=="                    { print_operator(yytext); }
-"!="                    { print_operator(yytext); }
-"<"                     { print_operator(yytext); }
-">"                     { print_operator(yytext); }
-"<="                    { print_operator(yytext); }
-">="                    { print_operator(yytext); }
+"=="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
+"!="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
+"<"                     { std::cout << "Operator (comparison): " << yytext << '\n'; }
+">"                     { std::cout << "Operator (comparison): " << yytext << '\n'; }
+"<="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
+">="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
 
-"&&"                    { print_operator(yytext); }
-"||"                    { print_operator(yytext); }
-"!"                     { print_operator(yytext); }
+"&&"                    { std::cout << "Operator (logical): " << yytext << '\n'; }
+"||"                    { std::cout << "Operator (logical): " << yytext << '\n'; }
+"!"                     { std::cout << "Operator (logical): " << yytext << '\n'; }
 
-"&"                     { print_operator(yytext); }
-"|"                     { print_operator(yytext); }
-"^"                     { print_operator(yytext); }
-"~"                     { print_operator(yytext); }
-"<<"                    { print_operator(yytext); }
-">>"                    { print_operator(yytext); }
+"&"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
+"|"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
+"^"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
+"~"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
+"<<"                    { std::cout << "Operator (bitwise): " << yytext << '\n'; }
+">>"                    { std::cout << "Operator (bitwise): " << yytext << '\n'; }
 
-"="                     { print_operator(yytext); }
-"+="                    { print_operator(yytext); }
-"-="                    { print_operator(yytext); }
-"*="                    { print_operator(yytext); }
-"/="                    { print_operator(yytext); }
-"%="                    { print_operator(yytext); }
-"&="                    { print_operator(yytext); }
-"|="                    { print_operator(yytext); }
-"^="                    { print_operator(yytext); }
-"<<="                   { print_operator(yytext); }
-">>="                   { print_operator(yytext); }
+"+="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"="                     { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"-="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"*="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"/="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"%="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"&="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"|="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"^="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"<<="                   { std::cout << "Operator (assignment): " << yytext << '\n'; }
+">>="                   { std::cout << "Operator (assignment): " << yytext << '\n'; }
 
-"."                     { print_operator(yytext); }
-"->"                    { print_operator(yytext); }
+"."                     { std::cout << "Operator (member): " << yytext << '\n'; }
+"->"                    { std::cout << "Operator (member): " << yytext << '\n'; }
 
-"?"                     { print_operator(yytext); }
-":"                     { print_operator(yytext); }
+"?"                     { std::cout << "Operator: " << yytext << '\n'; }
+":"                     { std::cout << "Operator: " << yytext << '\n'; }
 
 "id"                    {std::cout << "Identifier: " << yytext << '\n'; }
 "Class"                 {std::cout << "Identifier: " << yytext << '\n'; }
@@ -157,43 +169,98 @@ std::string string_buffer;
     string_buffer.clear();
 }
 
-<STRING_C>[^\\\x22\n]+  {
+\@\x22                   {
+    // @"
+    BEGIN(STRING_NS);
+    string_buffer.clear();
+}
+
+\x27                    {
+    BEGIN(CHAR_C);
+    string_buffer.clear();
+}
+
+<STRING_C,STRING_NS>[^\\\x22\n]+  {
     string_buffer += yytext;
 }
 
-<STRING_C>\\n           { string_buffer += '\n'; }
-<STRING_C>\\t           { string_buffer += '\t'; }
-<STRING_C>\\r           { string_buffer += '\r'; }
-<STRING_C>\\\\          { string_buffer += '\\'; }
-<STRING_C>\\\x22        { 
+<CHAR_C>[^\\\x27\n] { 
+    string_buffer += yytext;
+}
+
+<STRING_C,CHAR_C,STRING_NS>\\n           { string_buffer += '\n'; }
+<STRING_C,CHAR_C,STRING_NS>\\v           { string_buffer += '\v'; }
+<STRING_C,CHAR_C,STRING_NS>\\f           { string_buffer += '\f'; }
+<STRING_C,CHAR_C,STRING_NS>\\b           { string_buffer += '\b'; }
+<STRING_C,CHAR_C,STRING_NS>\\a           { string_buffer += '\a'; }
+<STRING_C,CHAR_C,STRING_NS>\\0           { string_buffer += '\0'; }
+<STRING_C,CHAR_C,STRING_NS>\\?           { string_buffer += '\?'; }
+<STRING_C,CHAR_C,STRING_NS>\\t           { string_buffer += '\t'; }
+<STRING_C,CHAR_C,STRING_NS>\\r           { string_buffer += '\r'; }
+<STRING_C,CHAR_C,STRING_NS>\\\\          { string_buffer += '\\'; }
+<STRING_C,CHAR_C,STRING_NS>\\\x22        { 
     // \"
     string_buffer += '"'; 
 }
-<STRING_C>\\\x27        { 
+<STRING_C,CHAR_C,STRING_NS>\\\x27        { 
     // \'
     string_buffer += '\''; 
 }
 
-<STRING_C>\\[0-7]{1,3}  { 
+<STRING_C,STRING_NS>\\u[A-Fa-f0-9]{4} {
+    unsigned int code;
+    sscanf(yytext + 2, "%4x", &code);
+    append_utf8(string_buffer, code);
+}
+
+<STRING_C,STRING_NS>\\U[A-Fa-f0-9]{8} {
+    unsigned int code;
+    sscanf(yytext + 2, "%8x", &code);
+    append_utf8(string_buffer, code);
+}
+<STRING_C,CHAR_C,STRING_NS>\\x[0-9A-Fa-f]{2} {
+    unsigned int code;
+    sscanf(yytext + 2, "%2x", &code);
+    string_buffer += static_cast<char>(code);
+}
+
+<STRING_C,CHAR_C,STRING_NS>\\[0-7]{1,3}  { 
     long code = strtol(yytext + 1, nullptr, 8);
     string_buffer += static_cast<char>(code);
 }
 
-<STRING_C>\\\n          { /* ignored */ }
+<STRING_C,CHAR_C,STRING_NS>\\\n          { /* ignored */ }
 
-<STRING_C>\n            { 
+<STRING_C,CHAR_C,STRING_NS>\n            { 
     std::cerr << "error: EOL in string"; 
     BEGIN(INITIAL);
 }
 
-<STRING_C>\x22          {
+<STRING_C,STRING_NS>\x22          {
     // "
-    std::cout << ">>> CString literal:\n" << string_buffer << '\n';
-    std::cout << "<<< CString ended" << '\n';
+    if (YY_START == STRING_C) {
+        std::cout << ">>> CString literal:\n" << string_buffer << '\n';
+        std::cout << "<<< CString ended" << '\n';
+    }
+    else {
+        std::cout << ">>> NSString literal:\n" << string_buffer << '\n';
+        std::cout << "<<< NSString ended" << '\n';
+    }
+    
     BEGIN(INITIAL);
 }
 
-<STRING_C><<EOF>>       {
+<CHAR_C>\x27            {
+    if (string_buffer.size() > 1) {
+        std::cerr << "error: char size could be less than 1\n";
+    }
+    else {
+        std::cout << "CChar literal: " << string_buffer << '\n';
+    }
+    BEGIN(INITIAL);
+}
+
+<STRING_C,CHAR_C,STRING_NS><<EOF>>       {
     std::cerr << "error: unclosed quote in string\n";
     BEGIN(INITIAL);
 }
