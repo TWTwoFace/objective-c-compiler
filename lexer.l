@@ -358,7 +358,7 @@ std::string string_buffer;
         std::cout << ">>> CString literal:\n" << string_buffer << '\n';
         std::cout << "<<< CString ended" << '\n';
     }
-    else {
+    else if (YY_START == STRING_NS) {
         std::cout << ">>> NSString literal:\n" << string_buffer << '\n';
         std::cout << "<<< NSString ended" << '\n';
     }
