@@ -59,9 +59,9 @@ void print_keyword(const char* text) {
 "?"                     { print_operator(yytext); }
 ":"                     { print_operator(yytext); }
 
-[0-9]*\.[0-9]+[Dd]?     { std::cout << "Double literal: " << yytext << '\n'; }
-[0-9]*\.[0-9]+[lL]      { std::cout << "Long double literal: " << yytext << '\n'; }
-[0-9]*\.[0-9]+[fF]      { std::cout << "Float literal: " << yytext << '\n'; }
+[0-9]*\.[0-9]+[Dd]?     { std::cout << "Double literal: " << std::stod(yytext) << '\n'; }
+[0-9]*\.[0-9]+[lL]      { std::cout << "Long double literal: " << std::stold(yytext) << '\n'; }
+[0-9]*\.[0-9]+[fF]      { std::cout << "Float literal: " << std::stof(yytext) << '\n'; }
 
 "id"                    {std::cout << "Identifier: " << yytext << '\n'; }
 "Class"                 {std::cout << "Identifier: " << yytext << '\n'; }
@@ -119,8 +119,8 @@ void print_keyword(const char* text) {
 "while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 
 ";"                     { std::cout << "Semicolon: " << yytext << '\n'; }
-0|[1-9][0-9]*           { std::cout << "Literal digit: " << std::stoi(yytext) << '\n'; }
-[A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
+0|[1-9][0-9]*           { std::cout << "Literal digit: " << yytext << '\n'; }
+[A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << std::stoi(yytext) << '\n'; }
 [ \t\n\r]+              { /* ignored*/ }
 
 %%
@@ -130,7 +130,7 @@ int main() {
     extern FILE* yyin; 
 
     /* Открываем наш файл test.cs и кладем его в yyin */
-    yyin = fopen("kucheroffTests.m", "r"); 
+    yyin = fopen("code.m", "r"); 
 
     if (!yyin) {
         std::cout << "Не удалось открыть файл code.m!\n";
