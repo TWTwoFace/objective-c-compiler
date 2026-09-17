@@ -1,13 +1,10 @@
 %{
 #include <iostream>
-#include <cstring>
 #include <string>
 #include <cstdlib>
-#include <stdio.h>
-#include <errno.h>
-#include <charconv>
+#include <cstdio>
+#include <cerrno>
 #include <optional>
-#include <string_view>
 
 static void append_utf8(std::string &str, unsigned int code) {
     if (code < 0x80) {
@@ -22,72 +19,42 @@ static void append_utf8(std::string &str, unsigned int code) {
     }
 }
 
-enum class ParseStatus { Ok, Invalid, OutOfRange };
+static int handle_integer(std::string text, int line) {
 
-template <typename T>
-struct ParseResult {
-    ParseStatus status;
-    T value{};
-};
+    auto try_parse = [&](auto parse_fn, const char* type_name) -> std::optional<int> {
+        try {
+            auto value = parse_fn(text);
+            std::cout << "Literal " << type_name << ": " << value << '\n';
+            return value; // TODO: ...
+        } catch (const std::invalid_argument&) {
+            std::cerr << "error: invalid integer literal in line: " << line << '\n';
+            return std::nullopt;;
+        } catch (const std::out_of_range&) {
+            return std::nullopt;
+        }
+    };
 
-template <typename T>
-ParseResult<T> parse_int(std::string_view s) {
-    T value{};
-    auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
-    if (ec == std::errc{})
-        return {ParseStatus::Ok, value};
-    if (ec == std::errc::result_out_of_range)
-        return {ParseStatus::OutOfRange};
-    return {ParseStatus::Invalid};
-}
-
-static int handle_integer(std::string_view text, int line) {
-    auto r_int = parse_int<int>(text);
-    
-    if (r_int.status == ParseStatus::Ok) {
-        std::cout << "Literal integer: " << r_int.value << '\n';
+    if (auto r = try_parse([](const std::string& str) { return std::stoi(str, nullptr, 0); }, "integer"))
         return 0; // TODO: ...
-    }
-    if (r_int.status == ParseStatus::Invalid) {
-        std::cerr << "error: invalid integer literal in line: " << line << '\n';
-        return -1;
-    }
 
-    auto r_long = parse_int<long>(text);
-    if (r_long.status == ParseStatus::Ok) {
-        std::cout << "Literal long integer: " << r_long.value << '\n';
+    if (auto r = try_parse([](const std::string& str) { return std::stol(str, nullptr, 0); }, "long integer"))
         return 0; // TODO: ...
-    }
-    if (r_long.status == ParseStatus::Invalid) {
-        std::cerr << "error: invalid integer literal in line: " << line << '\n';
-        return -1;
-    }
 
-    auto r_longlong = parse_int<long long int>(text);
-    if (r_longlong.status == ParseStatus::Ok) {
-        std::cout << "Literal long long integer: " << r_longlong.value << '\n';
+    if (auto r = try_parse([](const std::string& str) { return std::stoll(str, nullptr, 0); }, "long long integer"))
         return 0; // TODO: ...
-    } 
-    if (r_longlong.status == ParseStatus::Invalid) {
-        std::cerr << "error: invalid integer literal in line: " << line << '\n';
-        return -1;
-    }
-    if (r_longlong.status == ParseStatus::OutOfRange) {
-        std::cerr << "error: literal integer is out of range in line: " << line << '\n';
-        return -1;
-    }
 
+    std::cerr << "error: literal integer is out of range in line: " << line << '\n';
     return -1;
 }
-
 
 int line = 1;
 std::string string_buffer;
 
 %}
 
-FLOATING_NUM (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))|([0-9]+[eE][0-9]+)
-INTEGER_NUM 0|[1-9][0-9]*
+EXPONENT ([eE][+-]?[0-9]+)
+FLOATING_NUM (([0-9]+\.[0-9]*{EXPONENT}?)|([0-9]*\.[0-9]+{EXPONENT}?))|([0-9]+{EXPONENT})
+INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 %x STRING_C
 %x CHAR_C
@@ -264,7 +231,7 @@ INTEGER_NUM 0|[1-9][0-9]*
 
     char* endptr;
 
-    auto val = std::strtoull(yytext, &endptr, 10);
+    auto val = std::strtoull(yytext, &endptr, 0);
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
@@ -280,7 +247,7 @@ INTEGER_NUM 0|[1-9][0-9]*
 
     char* endptr;
 
-    auto val = std::strtoul(yytext, &endptr, 10);
+    auto val = std::strtoul(yytext, &endptr, 0);
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
@@ -295,7 +262,7 @@ INTEGER_NUM 0|[1-9][0-9]*
 
     char* endptr;
 
-    auto val = std::strtoll(yytext, &endptr, 10);
+    auto val = std::strtoll(yytext, &endptr, 0);
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
@@ -310,7 +277,7 @@ INTEGER_NUM 0|[1-9][0-9]*
 
     char* endptr;
 
-    auto val = std::strtol(yytext, &endptr, 10);
+    auto val = std::strtol(yytext, &endptr, 0);
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
@@ -325,7 +292,7 @@ INTEGER_NUM 0|[1-9][0-9]*
 
     char* endptr;
 
-    auto val = std::strtoul(yytext, &endptr, 10);
+    auto val = std::strtoul(yytext, &endptr, 0);
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
@@ -336,13 +303,20 @@ INTEGER_NUM 0|[1-9][0-9]*
 }
 
 {INTEGER_NUM}          { 
-    int result = handle_integer(std::string_view(yytext), line);
+    int result = handle_integer(yytext, line);
 
     if (result != -1) {
         // TODO: return result
     } 
 }
 
+0[0-7]*[89][0-9]*       { 
+    std::cerr << "error: invalid digit in octal literal in line: " << line << '\n'; 
+}
+
+(0[xX][0-9A-Fa-f]*[G-Zg-z][0-9A-Fa-f]*)|0[xX] {
+    std::cerr << "error: invalid digit in hex literal in line: " << line << '\n'; 
+}
 
 \x22                    {
     //"
