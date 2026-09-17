@@ -1,0 +1,14 @@
+foo
+Foo
+_foo
+foo_bar
+FOO_BAR
+foo123
+_123
+a
+Z
+___
+_1_2_3
+camelCase
+snake_case
+SCREAMING_CASE
