@@ -5,6 +5,9 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <errno.h>
+#include <charconv>
+#include <optional>
+#include <string_view>
 
 static void append_utf8(std::string &str, unsigned int code) {
     if (code < 0x80) {
@@ -18,10 +21,73 @@ static void append_utf8(std::string &str, unsigned int code) {
         str += static_cast<char>(0x80 | (code & 0x3F));
     }
 }
+
+enum class ParseStatus { Ok, Invalid, OutOfRange };
+
+template <typename T>
+struct ParseResult {
+    ParseStatus status;
+    T value{};
+};
+
+template <typename T>
+ParseResult<T> parse_int(std::string_view s) {
+    T value{};
+    auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
+    if (ec == std::errc{})
+        return {ParseStatus::Ok, value};
+    if (ec == std::errc::result_out_of_range)
+        return {ParseStatus::OutOfRange};
+    return {ParseStatus::Invalid};
+}
+
+static int handle_integer(std::string_view text, int line) {
+    auto r_int = parse_int<int>(text);
+    
+    if (r_int.status == ParseStatus::Ok) {
+        std::cout << "Literal integer: " << r_int.value << '\n';
+        return 0; // TODO: ...
+    }
+    if (r_int.status == ParseStatus::Invalid) {
+        std::cerr << "error: invalid integer literal in line: " << line << '\n';
+        return -1;
+    }
+
+    auto r_long = parse_int<long>(text);
+    if (r_long.status == ParseStatus::Ok) {
+        std::cout << "Literal long integer: " << r_long.value << '\n';
+        return 0; // TODO: ...
+    }
+    if (r_long.status == ParseStatus::Invalid) {
+        std::cerr << "error: invalid integer literal in line: " << line << '\n';
+        return -1;
+    }
+
+    auto r_longlong = parse_int<long long int>(text);
+    if (r_longlong.status == ParseStatus::Ok) {
+        std::cout << "Literal long long integer: " << r_longlong.value << '\n';
+        return 0; // TODO: ...
+    } 
+    if (r_longlong.status == ParseStatus::Invalid) {
+        std::cerr << "error: invalid integer literal in line: " << line << '\n';
+        return -1;
+    }
+    if (r_longlong.status == ParseStatus::OutOfRange) {
+        std::cerr << "error: literal integer is out of range in line: " << line << '\n';
+        return -1;
+    }
+
+    return -1;
+}
+
+
 int line = 1;
 std::string string_buffer;
 
 %}
+
+FLOATING_NUM (([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+))|([0-9]+[eE][0-9]+)
+INTEGER_NUM 0|[1-9][0-9]*
 
 %x STRING_C
 %x CHAR_C
@@ -169,7 +235,7 @@ std::string string_buffer;
 
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 
-[0-9]*\.[0-9]+[lL]      { 
+{FLOATING_NUM}[lL]      { 
     try {
         std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
@@ -177,15 +243,7 @@ std::string string_buffer;
     }
 }
 
-[0-9]+\.[0-9]*[lL]      { 
-    try {
-        std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid long double literal in line: " << line << '\n';
-    }
-}
-
-[0-9]*\.[0-9]+[fF]      { 
+{FLOATING_NUM}[fF]      { 
     try {
         std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
@@ -193,15 +251,7 @@ std::string string_buffer;
     }
 }
 
-[0-9]+\.[0-9]*[fF]      { 
-    try {
-        std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid float literal in line: " << line << '\n';
-    }
-}
-
-[0-9]*\.[0-9]+     { 
+{FLOATING_NUM}         { 
     try {
         std::cout << "Double literal: " << std::stod(yytext) << '\n';
     } catch (const std::invalid_argument& e) {
@@ -209,15 +259,7 @@ std::string string_buffer;
     }
 }
 
-[0-9]+\.[0-9]*     { 
-    try {
-        std::cout << "Double literal: " << std::stod(yytext) << '\n';
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid double literal in line: " << line << '\n';
-    }
-}
-
-(0|[1-9][0-9]*)([uU][lL]{2}|[lL]{2}[uU])     { 
+{INTEGER_NUM}([uU][lL]{2}|[lL]{2}[uU])     { 
     errno = 0;
 
     char* endptr;
@@ -226,14 +268,14 @@ std::string string_buffer;
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
-        std::cerr << "error: literal out of range in line: " << line << '\n';
+        std::cerr << "error: literal is out of range in line: " << line << '\n';
     } else {
         std::cout << "Literal unsigned long long integer: " << val << '\n'; 
     }
 }
 
 
-0|[1-9][0-9]*([uU][lL]|[lL][uU])      { 
+{INTEGER_NUM}([uU][lL]|[lL][uU])      { 
     errno = 0;
 
     char* endptr;
@@ -242,13 +284,13 @@ std::string string_buffer;
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
-        std::cerr << "error: literal out of range in line: " << line << '\n';
+        std::cerr << "error: literal is out of range in line: " << line << '\n';
     } else {
         std::cout << "Literal unsigned long integer: " << val << '\n'; 
     }
 }
 
-0|[1-9][0-9]*[lL][lL]       { 
+{INTEGER_NUM}[lL][lL]       { 
     errno = 0;
 
     char* endptr;
@@ -257,13 +299,13 @@ std::string string_buffer;
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
-        std::cerr << "error: literal out of range in line: " << line << '\n';
+        std::cerr << "error: literal is out of range in line: " << line << '\n';
     } else {
         std::cout << "Literal long long integer: " << val << '\n'; 
     }
 }
 
-0|[1-9][0-9]*[lL]       { 
+{INTEGER_NUM}[lL]       { 
     errno = 0;
 
     char* endptr;
@@ -272,13 +314,13 @@ std::string string_buffer;
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
-        std::cerr << "error: literal out of range in line: " << line << '\n';
+        std::cerr << "error: literal is out of range in line: " << line << '\n';
     } else {
         std::cout << "Literal long integer: " << val << '\n'; 
     }
 }
 
-0|[1-9][0-9]*[uU]       { 
+{INTEGER_NUM}[uU]       { 
     errno = 0;
 
     char* endptr;
@@ -287,18 +329,18 @@ std::string string_buffer;
     if(yytext == endptr) {
         std::cerr << "error: literal is not a number in line: " << line << '\n';
     } else if (errno == ERANGE) {
-        std::cerr << "error: literal out of range in line: " << line << '\n';
+        std::cerr << "error: literal is out of range in line: " << line << '\n';
     } else {
         std::cout << "Literal unsigned integer: " << val << '\n'; 
     }
 }
 
-0|[1-9][0-9]*           { 
-    try { 
-        std::cout << "Literal integer: " << std::stoi(yytext) << '\n'; 
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid integer literal in line: " << line << '\n';
-    }
+{INTEGER_NUM}          { 
+    int result = handle_integer(std::string_view(yytext), line);
+
+    if (result != -1) {
+        // TODO: return result
+    } 
 }
 
 
