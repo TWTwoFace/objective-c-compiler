@@ -386,6 +386,11 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 <STRING_C,CHAR_C,STRING_NS>\\\n          { /* ignored */ }
 
+<STRING_C,CHAR_C,STRING_NS>\\.           { 
+    /*ref: https://onecompiler.com/objectivec */ 
+    string_buffer += yytext[1];
+}
+
 <STRING_C,CHAR_C,STRING_NS>\n            { 
     std::cerr << "error: EOL in string in line: " << line << '\n'; 
     line++;
