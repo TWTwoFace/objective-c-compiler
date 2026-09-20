@@ -1,0 +1,12 @@
+char
+double
+float
+int
+long
+short
+enum
+BOOL
+id
+Class
+SEL
+IMP
