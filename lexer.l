@@ -65,7 +65,6 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 %option never-interactive
 
 %%
-
 "["                     { std::cout << "Punctuator: " << yytext << '\n'; }
 "]"                     { std::cout << "Punctuator: " << yytext << '\n'; }
 "{"                     { std::cout << "Punctuator: " << yytext << '\n'; }
@@ -120,12 +119,6 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 "?"                     { std::cout << "Operator: " << yytext << '\n'; }
 
-"id"                    {std::cout << "Identifier: " << yytext << '\n'; }
-"Class"                 {std::cout << "Identifier: " << yytext << '\n'; }
-"SEL"                   {std::cout << "Identifier: " << yytext << '\n'; }
-"IMP"                   {std::cout << "Identifier: " << yytext << '\n'; }
-"BOOL"                  {std::cout << "Identifier: " << yytext << '\n'; }
-
 "self"                  {std::cout << "Object constant: " << yytext << '\n'; }
 "super"                 {std::cout << "Object constant: " << yytext << '\n'; }
 "nil"                   {std::cout << "Object constant: " << yytext << '\n'; }
@@ -144,36 +137,42 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 "auto"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "break"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 "case"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"char"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "const"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 "continue"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "default"               { std::cout << "Keyword: "     << yytext << '\n'; }
 "do"                    { std::cout << "Keyword: "     << yytext << '\n'; }
-"double"                { std::cout << "Keyword: "     << yytext << '\n'; }
 "else"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"enum"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "extern"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"float"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 "for"                   { std::cout << "Keyword: "     << yytext << '\n'; }
 "goto"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "if"                    { std::cout << "Keyword: "     << yytext << '\n'; }
 "inline"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"int"                   { std::cout << "Keyword: "     << yytext << '\n'; }
-"long"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "register"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "return"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"short"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 "signed"                { std::cout << "Keyword: "     << yytext << '\n'; }
 "sizeof"                { std::cout << "Keyword: "     << yytext << '\n'; }
 "static"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"struct"                { std::cout << "Keyword: "     << yytext << '\n'; }
 "switch"                { std::cout << "Keyword: "     << yytext << '\n'; }
 "typedef"               { std::cout << "Keyword: "     << yytext << '\n'; }
-"union"                 { std::cout << "Keyword: "     << yytext << '\n'; }
 "unsigned"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "void"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "volatile"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
+
+"char"                  { std::cout << "Data type: "     << yytext << '\n'; }
+"double"                { std::cout << "Data type: "     << yytext << '\n'; }
+"enum"                  { std::cout << "Data type: "     << yytext << '\n'; }
+"float"                 { std::cout << "Data type: "     << yytext << '\n'; }
+"int"                   { std::cout << "Data type: "     << yytext << '\n'; }
+"long"                  { std::cout << "Data type: "     << yytext << '\n'; }
+"short"                 { std::cout << "Data type: "     << yytext << '\n'; }
+"BOOL"                  { std::cout << "Data type: "     << yytext << '\n'; }
+"struct"                { std::cout << "Data type: "     << yytext << '\n'; }
+"union"                 { std::cout << "Data type: "     << yytext << '\n'; }
+"id"                    { std::cout << "Data type: "     << yytext << '\n'; }
+"Class"                 { std::cout << "Data type: "     << yytext << '\n'; }
+"SEL"                   { std::cout << "Data type: "     << yytext << '\n'; }
+"IMP"                   { std::cout << "Data type: "     << yytext << '\n'; }
 
 "@interface"            { std::cout << "Directive: " << yytext << '\n'; }
 "@implementation"       { std::cout << "Directive: " << yytext << '\n'; }
