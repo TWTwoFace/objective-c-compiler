@@ -122,20 +122,20 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 "?"                     { std::cout << "Operator: " << yytext << '\n'; }
 
-"self"                  {std::cout << "Object constant: " << yytext << '\n'; }
-"super"                 {std::cout << "Object constant: " << yytext << '\n'; }
-"nil"                   {std::cout << "Object constant: " << yytext << '\n'; }
-"Nil"                   {std::cout << "Object constant: " << yytext << '\n'; }
+"self"                  { std::cout << "Object constant: " << yytext << '\n'; }
+"super"                 { std::cout << "Object constant: " << yytext << '\n'; }
+"nil"                   { std::cout << "Object constant: " << yytext << '\n'; }
+"Nil"                   { std::cout << "Object constant: " << yytext << '\n'; }
 
-"YES"                   {std::cout << "Boolean literal: " << yytext << '\n'; }
-"NO"                    {std::cout << "Boolean literal: " << yytext << '\n'; }
+"YES"                   { std::cout << "Boolean literal: " << yytext << '\n'; }
+"NO"                    { std::cout << "Boolean literal: " << yytext << '\n'; }
 
-"oneway"                {std::cout << "Qualifier: " << yytext << '\n'; }
-"in"                    {std::cout << "Qualifier: " << yytext << '\n'; }
-"out"                   {std::cout << "Qualifier: " << yytext << '\n'; }
-"inout"                 {std::cout << "Qualifier: " << yytext << '\n'; }
-"bycopy"                {std::cout << "Qualifier: " << yytext << '\n'; }
-"byref"                 {std::cout << "Qualifier: " << yytext << '\n'; }
+"oneway"                { std::cout << "Qualifier: " << yytext << '\n'; }
+"in"                    { std::cout << "Qualifier: " << yytext << '\n'; }
+"out"                   { std::cout << "Qualifier: " << yytext << '\n'; }
+"inout"                 { std::cout << "Qualifier: " << yytext << '\n'; }
+"bycopy"                { std::cout << "Qualifier: " << yytext << '\n'; }
+"byref"                 { std::cout << "Qualifier: " << yytext << '\n'; }
 
 "auto"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "break"                 { std::cout << "Keyword: "     << yytext << '\n'; }
