@@ -396,7 +396,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <STRING_C,CHAR_C,STRING_NS>\\\n          { /* ignored */ }
 
 <STRING_C,CHAR_C,STRING_NS>\\.           { 
-    /*ref: https://onecompiler.com/objectivec */ 
+    std::cerr << "warning: unknown escape sequence \\" << yytext[1] << " in line: " << line << '\n';
     string_buffer += yytext[1];
 }
 
