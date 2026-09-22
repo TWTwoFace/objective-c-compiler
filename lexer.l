@@ -211,7 +211,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     } catch (const std::invalid_argument& e) {
         std::cerr << "error: invalid long double literal in line: " << line << '\n';
     } catch (const std::out_of_range& e) {
-        std:cerr << "error: long double literal is out of range in line: " << line << '\n';
+        std::cerr << "error: long double literal is out of range in line: " << line << '\n';
     }
 }
 
@@ -221,7 +221,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     } catch (const std::invalid_argument& e) {
         std::cerr << "error: invalid float literal in line: " << line << '\n';
     } catch (const std::out_of_range& e) {
-        std:cerr << "error: float literal is out of range in line: " << line << '\n';
+        std::cerr << "error: float literal is out of range in line: " << line << '\n';
     }
 }
 
@@ -231,7 +231,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     } catch (const std::invalid_argument& e) {
         std::cerr << "error: invalid double literal in line: " << line << '\n';
     } catch (const std::out_of_range& e) {
-        std:cerr << "error: double literal is out of range in line: " << line << '\n';
+        std::cerr << "error: double literal is out of range in line: " << line << '\n';
     }
 }
 
