@@ -1,10 +1,10 @@
 %{
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <cstdio>
-#include <cerrno>
-#include <optional>
+#include <iostream>   /* std::cout, std::cerr */
+#include <string>     
+#include <cstdlib>    /* std::strtoul, std::strtoll, std::strtoull */
+#include <cstdio>     /* FILE, fopen, fclose */
+#include <cerrno>     /* errno, ERANGE */
+#include <optional>   /* std::optional */
 
 static void append_utf8(std::string &str, unsigned int code) {
     if (code < 0x80) {
@@ -52,10 +52,12 @@ std::string string_buffer;
 
 %}
 
+/* Макросы */
 EXPONENT ([eE][+-]?[0-9]+)
 FLOATING_NUM (([0-9]+\.[0-9]*{EXPONENT}?)|([0-9]*\.[0-9]+{EXPONENT}?))|([0-9]+{EXPONENT})
 INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
+/* Состояния */
 %x STRING_C
 %x CHAR_C
 %x STRING_NS
@@ -64,6 +66,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 %option noyywrap
 %option never-interactive
 
+/* Секция правил */
 %%
 "["                     { std::cout << "Punctuator: " << yytext << '\n'; }
 "]"                     { std::cout << "Punctuator: " << yytext << '\n'; }
@@ -201,11 +204,14 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 [A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
 
+
 {FLOATING_NUM}[lL]      { 
     try {
         std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
         std::cerr << "error: invalid long double literal in line: " << line << '\n';
+    } catch (const std::out_of_range& e) {
+        std:cerr << "error: long double literal is out of range in line: " << line << '\n';
     }
 }
 
@@ -214,6 +220,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
         std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
     } catch (const std::invalid_argument& e) {
         std::cerr << "error: invalid float literal in line: " << line << '\n';
+    } catch (const std::out_of_range& e) {
+        std:cerr << "error: float literal is out of range in line: " << line << '\n';
     }
 }
 
@@ -222,6 +230,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
         std::cout << "Double literal: " << std::stod(yytext) << '\n';
     } catch (const std::invalid_argument& e) {
         std::cerr << "error: invalid double literal in line: " << line << '\n';
+    } catch (const std::out_of_range& e) {
+        std:cerr << "error: double literal is out of range in line: " << line << '\n';
     }
 }
 
@@ -425,9 +435,11 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     BEGIN(INITIAL);
 }
 
-\/\* { BEGIN(MULTILINE_COMMENT); }
-<MULTILINE_COMMENT>\*\/ { BEGIN(INITIAL); }
-<MULTILINE_COMMENT>. { /* ignored */ }
+\/\*  { BEGIN(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT>\*+\/       { BEGIN(INITIAL); }
+<MULTILINE_COMMENT>[^*\n]+     { /* ignored */ }
+<MULTILINE_COMMENT>\*+[^*/]+   { /* ignored */ }
+<MULTILINE_COMMENT>\*+         { /* ignored */ }
 <MULTILINE_COMMENT><<EOF>> { 
     std::cerr << "error: multiline comment was not closed in line: " << line << '\n'; 
     BEGIN(INITIAL);
