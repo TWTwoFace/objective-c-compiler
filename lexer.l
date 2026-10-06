@@ -5,51 +5,6 @@
 #include <cstdio>     /* FILE, fopen, fclose */
 #include <cerrno>     /* errno, ERANGE */
 #include <optional>   /* std::optional */
-
-static void append_utf8(std::string &str, unsigned int code) {
-    if (code < 0x80) {
-        str += static_cast<char>(code);
-    } else if (code < 0x800) {
-        str += static_cast<char>(0xC0 | (code >> 6));
-        str += static_cast<char>(0x80 | (code & 0x3F));
-    } else {
-        str += static_cast<char>(0xE0 | (code >> 12));
-        str += static_cast<char>(0x80 | ((code >> 6) & 0x3F));
-        str += static_cast<char>(0x80 | (code & 0x3F));
-    }
-}
-
-static int handle_integer(std::string text, int line) {
-
-    auto try_parse = [&](auto parse_fn, const char* type_name) -> std::optional<int> {
-        try {
-            auto value = parse_fn(text);
-            std::cout << "Literal " << type_name << ": " << value << '\n';
-            return value; // TODO: ...
-        } catch (const std::invalid_argument&) {
-            std::cerr << "error: invalid integer literal in line: " << line << '\n';
-            return std::nullopt;;
-        } catch (const std::out_of_range&) {
-            return std::nullopt;
-        }
-    };
-
-    if (auto r = try_parse([](const std::string& str) { return std::stoi(str, nullptr, 0); }, "integer"))
-        return 0; // TODO: ...
-
-    if (auto r = try_parse([](const std::string& str) { return std::stol(str, nullptr, 0); }, "long integer"))
-        return 0; // TODO: ...
-
-    if (auto r = try_parse([](const std::string& str) { return std::stoll(str, nullptr, 0); }, "long long integer"))
-        return 0; // TODO: ...
-
-    std::cerr << "error: literal integer is out of range in line: " << line << '\n';
-    return -1;
-}
-
-int line = 1;
-std::string string_buffer;
-
 %}
 
 /* Макросы */
@@ -451,6 +406,50 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <*>[ \t\r]+     { /* ignored*/ }
 
 %%
+static void append_utf8(std::string &str, unsigned int code) {
+    if (code < 0x80) {
+        str += static_cast<char>(code);
+    } else if (code < 0x800) {
+        str += static_cast<char>(0xC0 | (code >> 6));
+        str += static_cast<char>(0x80 | (code & 0x3F));
+    } else {
+        str += static_cast<char>(0xE0 | (code >> 12));
+        str += static_cast<char>(0x80 | ((code >> 6) & 0x3F));
+        str += static_cast<char>(0x80 | (code & 0x3F));
+    }
+}
+
+static std::optional<int> handle_integer(std::string text, int line) {
+
+    auto try_parse = [&](auto parse_fn, const char* type_name) -> std::optional<int> {
+        try {
+            auto value = parse_fn(text);
+            std::cout << "Literal " << type_name << ": " << value << '\n';
+            return value; // TODO: ...
+        } catch (const std::invalid_argument&) {
+            std::cerr << "error: invalid integer literal in line: " << line << '\n';
+            return std::nullopt;;
+        } catch (const std::out_of_range&) {
+            return std::nullopt;
+        }
+    };
+
+    if (auto r = try_parse([](const std::string& str) { return std::stoi(str, nullptr, 0); }, "integer"))
+        return r;
+
+    if (auto r = try_parse([](const std::string& str) { return std::stol(str, nullptr, 0); }, "long integer"))
+        return r;
+
+    if (auto r = try_parse([](const std::string& str) { return std::stoll(str, nullptr, 0); }, "long long integer"))
+        return r;
+
+    std::cerr << "error: literal integer is out of range in line: " << line << '\n';
+    return std::nullopt;
+}
+
+int line = 1;
+std::string string_buffer;
+
 int main(int argc, char* argv[]) {
     extern FILE* yyin; 
 
