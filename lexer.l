@@ -5,6 +5,18 @@
 #include <cstdio>     /* FILE, fopen, fclose */
 #include <cerrno>     /* errno, ERANGE */
 #include <optional>   /* std::optional */
+
+namespace {
+    std::string file_name;
+    int line = 1;
+    std::string string_buffer;
+}
+
+static void append_utf8(std::string &str, unsigned int code);
+static std::optional<int> handle_integer(std::string text, int line);
+static void error(const std::string &str);
+static void warning(const std::string &str);
+
 %}
 
 /* Макросы */
@@ -116,10 +128,10 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 "void"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 "volatile"              { std::cout << "Keyword: "     << yytext << '\n'; }
 "while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
+"enum"                  { std::cout << "Keyword: "     << yytext << '\n'; }
 
 "char"                  { std::cout << "Data type: "     << yytext << '\n'; }
 "double"                { std::cout << "Data type: "     << yytext << '\n'; }
-"enum"                  { std::cout << "Data type: "     << yytext << '\n'; }
 "float"                 { std::cout << "Data type: "     << yytext << '\n'; }
 "int"                   { std::cout << "Data type: "     << yytext << '\n'; }
 "long"                  { std::cout << "Data type: "     << yytext << '\n'; }
@@ -157,49 +169,55 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 "@import"               { std::cout << "Directive: " << yytext << '\n'; }
 "@"                     { std::cout << "Directive at: " << yytext << '\n'; }
 
-[A-Za-z_][A-Za-z0-9_]*  { std::cout << "Name: " << yytext << '\n'; }
+[A-Za-z_][A-Za-z0-9_]*  { std::cout << "ID: " << yytext << '\n'; }
 
 
 {FLOATING_NUM}[lL]      { 
+
+    long double value = 0;
+
     try {
-        std::cout << "Long double literal: " << std::stold(yytext) << '\n'; 
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid long double literal in line: " << line << '\n';
+        value = std::stold(yytext);
     } catch (const std::out_of_range& e) {
-        std::cerr << "error: long double literal is out of range in line: " << line << '\n';
+        warning("magnitude of floating-point constant too large for type 'long double'");
     }
+
+    std::cout << "Long double literal: " << value << '\n'; 
 }
 
 {FLOATING_NUM}[fF]      { 
+
+    float value = 0;
+
     try {
-        std::cout << "Float literal: " << std::stof(yytext) << '\n'; 
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid float literal in line: " << line << '\n';
+        value = std::stof(yytext);
     } catch (const std::out_of_range& e) {
-        std::cerr << "error: float literal is out of range in line: " << line << '\n';
+        warning("magnitude of floating-point constant too large for type 'float'");
     }
+
+    std::cout << "Float literal: " << value << '\n'; 
 }
 
-{FLOATING_NUM}         { 
+{FLOATING_NUM}         {
+
+    double value = 0;
+
     try {
-        std::cout << "Double literal: " << std::stod(yytext) << '\n';
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "error: invalid double literal in line: " << line << '\n';
+        value = std::stod(yytext);
     } catch (const std::out_of_range& e) {
-        std::cerr << "error: double literal is out of range in line: " << line << '\n';
+        warning("magnitude of floating-point constant too large for type 'double'");
     }
+
+    std::cout << "Double literal: " << value << '\n';
 }
 
 {INTEGER_NUM}([uU][lL]{2}|[lL]{2}[uU])     { 
     errno = 0;
 
-    char* endptr;
+    auto val = std::strtoull(yytext, nullptr, 0);
 
-    auto val = std::strtoull(yytext, &endptr, 0);
-    if(yytext == endptr) {
-        std::cerr << "error: literal is not a number in line: " << line << '\n';
-    } else if (errno == ERANGE) {
-        std::cerr << "error: literal is out of range in line: " << line << '\n';
+    if (errno == ERANGE) {
+        error("integer literal is too large to be represented in any integer type");
     } else {
         std::cout << "Literal unsigned long long integer: " << val << '\n'; 
     }
@@ -209,13 +227,10 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 {INTEGER_NUM}([uU][lL]|[lL][uU])      { 
     errno = 0;
 
-    char* endptr;
+    auto val = std::strtoul(yytext, nullptr, 0);
 
-    auto val = std::strtoul(yytext, &endptr, 0);
-    if(yytext == endptr) {
-        std::cerr << "error: literal is not a number in line: " << line << '\n';
-    } else if (errno == ERANGE) {
-        std::cerr << "error: literal is out of range in line: " << line << '\n';
+    if (errno == ERANGE) {
+        error("integer literal is too large to be represented in 'unsigned long' integer type");
     } else {
         std::cout << "Literal unsigned long integer: " << val << '\n'; 
     }
@@ -224,13 +239,10 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 {INTEGER_NUM}[lL][lL]       { 
     errno = 0;
 
-    char* endptr;
-
-    auto val = std::strtoll(yytext, &endptr, 0);
-    if(yytext == endptr) {
-        std::cerr << "error: literal is not a number in line: " << line << '\n';
-    } else if (errno == ERANGE) {
-        std::cerr << "error: literal is out of range in line: " << line << '\n';
+    auto val = std::strtoll(yytext, nullptr, 0);
+    
+    if (errno == ERANGE) {
+        error("integer literal is too large to be represented in 'long long' integer type");
     } else {
         std::cout << "Literal long long integer: " << val << '\n'; 
     }
@@ -239,13 +251,10 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 {INTEGER_NUM}[lL]       { 
     errno = 0;
 
-    char* endptr;
-
-    auto val = std::strtol(yytext, &endptr, 0);
-    if(yytext == endptr) {
-        std::cerr << "error: literal is not a number in line: " << line << '\n';
-    } else if (errno == ERANGE) {
-        std::cerr << "error: literal is out of range in line: " << line << '\n';
+    auto val = std::strtol(yytext, nullptr, 0);
+    
+    if (errno == ERANGE) {
+        error("integer literal is too large to be represented in 'long' integer type");
     } else {
         std::cout << "Literal long integer: " << val << '\n'; 
     }
@@ -254,32 +263,25 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 {INTEGER_NUM}[uU]       { 
     errno = 0;
 
-    char* endptr;
+    auto val = std::strtoul(yytext, nullptr, 0);
 
-    auto val = std::strtoul(yytext, &endptr, 0);
-    if(yytext == endptr) {
-        std::cerr << "error: literal is not a number in line: " << line << '\n';
-    } else if (errno == ERANGE) {
-        std::cerr << "error: literal is out of range in line: " << line << '\n';
+    if (errno == ERANGE) {
+        error("integer literal is too large to be represented in 'unsigned int' integer type");
     } else {
         std::cout << "Literal unsigned integer: " << val << '\n'; 
     }
 }
 
 {INTEGER_NUM}          { 
-    int result = handle_integer(yytext, line);
-
-    if (result != -1) {
-        // TODO: return result
-    } 
+    handle_integer(yytext, line);
 }
 
 0[0-7]*[89][0-9]*       { 
-    std::cerr << "error: invalid digit in octal literal in line: " << line << '\n'; 
+    error("invalid digit in octal constant"); 
 }
 
 (0[xX][0-9A-Fa-f]*[G-Zg-z][0-9A-Fa-f]*)|0[xX] {
-    std::cerr << "error: invalid digit in hex literal in line: " << line << '\n'; 
+    error("invalid digit in hex constant"); 
 }
 
 \x22                    {
@@ -351,12 +353,14 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <STRING_C,CHAR_C,STRING_NS>\\\n          { /* ignored */ }
 
 <STRING_C,CHAR_C,STRING_NS>\\.           { 
-    std::cerr << "warning: unknown escape sequence \\" << yytext[1] << " in line: " << line << '\n';
+    std::string warning_str = "unknown escape sequence \\";
+    warning_str += yytext[1];
+    warning(warning_str);
     string_buffer += yytext[1];
 }
 
 <STRING_C,CHAR_C,STRING_NS>\n            { 
-    std::cerr << "error: EOL in string in line: " << line << '\n'; 
+    error("EOL in string"); 
     line++;
     BEGIN(INITIAL);
 }
@@ -377,16 +381,16 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 <CHAR_C>\x27            {
     if (string_buffer.size() > 1) {
-        std::cerr << "error: char size could be less than 1 in line: " << line << '\n';
+        warning("multi-character character constant");
     }
-    else {
-        std::cout << "CChar literal: " << string_buffer << '\n';
-    }
+
+    std::cout << "CChar literal: " << string_buffer[string_buffer.size() - 1] << '\n';
+    
     BEGIN(INITIAL);
 }
 
 <STRING_C,CHAR_C,STRING_NS><<EOF>>       {
-    std::cerr << "error: unclosed quote in string in line: " << line << '\n';
+    error("unclosed quote in string");
     BEGIN(INITIAL);
 }
 
@@ -396,7 +400,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <MULTILINE_COMMENT>\*+[^*/]+   { /* ignored */ }
 <MULTILINE_COMMENT>\*+         { /* ignored */ }
 <MULTILINE_COMMENT><<EOF>> { 
-    std::cerr << "error: multiline comment was not closed in line: " << line << '\n'; 
+    error("multiline comment was not closed"); 
     BEGIN(INITIAL);
 }
 
@@ -425,10 +429,7 @@ static std::optional<int> handle_integer(std::string text, int line) {
         try {
             auto value = parse_fn(text);
             std::cout << "Literal " << type_name << ": " << value << '\n';
-            return value; // TODO: ...
-        } catch (const std::invalid_argument&) {
-            std::cerr << "error: invalid integer literal in line: " << line << '\n';
-            return std::nullopt;;
+            return value;
         } catch (const std::out_of_range&) {
             return std::nullopt;
         }
@@ -443,12 +444,17 @@ static std::optional<int> handle_integer(std::string text, int line) {
     if (auto r = try_parse([](const std::string& str) { return std::stoll(str, nullptr, 0); }, "long long integer"))
         return r;
 
-    std::cerr << "error: literal integer is out of range in line: " << line << '\n';
+    error("integer literal is too large to be represented in any signed integer type");
     return std::nullopt;
 }
 
-int line = 1;
-std::string string_buffer;
+static void error(const std::string &str) {
+    std::cerr << file_name << ":" << line << ":" << " error: " << str << '\0';
+}
+
+static void warning(const std::string &str) {
+    std::cerr << file_name << ":" << line << ":" << " warning: " << str << '\0';
+}
 
 int main(int argc, char* argv[]) {
     extern FILE* yyin; 
@@ -465,6 +471,8 @@ int main(int argc, char* argv[]) {
         std::cout << "File was not found!\n";
         return 1;
     }
+
+    file_name = argv[1];
 
     yylex(); 
 
