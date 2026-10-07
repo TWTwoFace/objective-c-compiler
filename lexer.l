@@ -6,16 +6,11 @@
 #include <cerrno>     /* errno, ERANGE */
 #include <optional>   /* std::optional */
 
-namespace {
-    std::string file_name;
-    int line = 1;
-    std::string string_buffer;
-}
-
+static std::string file_name;
 static void append_utf8(std::string &str, unsigned int code);
 static std::optional<int> handle_integer(std::string text, int line);
-static void error(const std::string &str);
-static void warning(const std::string &str);
+static void error(const std::string &str, int line);
+static void warning(const std::string &str, int line);
 
 %}
 
@@ -35,6 +30,12 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 /* Секция правил */
 %%
+%{
+    int line = 1;
+    std::string string_buffer;
+%}
+
+
 "["                     { std::cout << "Punctuator: " << yytext << '\n'; }
 "]"                     { std::cout << "Punctuator: " << yytext << '\n'; }
 "{"                     { std::cout << "Punctuator: " << yytext << '\n'; }
@@ -179,7 +180,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     try {
         value = std::stold(yytext);
     } catch (const std::out_of_range& e) {
-        warning("magnitude of floating-point constant too large for type 'long double'");
+        warning("magnitude of floating-point constant too large for type 'long double'", line);
     }
 
     std::cout << "Long double literal: " << value << '\n'; 
@@ -192,7 +193,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     try {
         value = std::stof(yytext);
     } catch (const std::out_of_range& e) {
-        warning("magnitude of floating-point constant too large for type 'float'");
+        warning("magnitude of floating-point constant too large for type 'float'", line);
     }
 
     std::cout << "Float literal: " << value << '\n'; 
@@ -205,7 +206,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     try {
         value = std::stod(yytext);
     } catch (const std::out_of_range& e) {
-        warning("magnitude of floating-point constant too large for type 'double'");
+        warning("magnitude of floating-point constant too large for type 'double'", line);
     }
 
     std::cout << "Double literal: " << value << '\n';
@@ -217,7 +218,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     auto val = std::strtoull(yytext, nullptr, 0);
 
     if (errno == ERANGE) {
-        error("integer literal is too large to be represented in any integer type");
+        error("integer literal is too large to be represented in any integer type", line);
     } else {
         std::cout << "Literal unsigned long long integer: " << val << '\n'; 
     }
@@ -230,7 +231,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     auto val = std::strtoul(yytext, nullptr, 0);
 
     if (errno == ERANGE) {
-        error("integer literal is too large to be represented in 'unsigned long' integer type");
+        error("integer literal is too large to be represented in 'unsigned long' integer type", line);
     } else {
         std::cout << "Literal unsigned long integer: " << val << '\n'; 
     }
@@ -242,7 +243,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     auto val = std::strtoll(yytext, nullptr, 0);
     
     if (errno == ERANGE) {
-        error("integer literal is too large to be represented in 'long long' integer type");
+        error("integer literal is too large to be represented in 'long long' integer type", line);
     } else {
         std::cout << "Literal long long integer: " << val << '\n'; 
     }
@@ -254,7 +255,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     auto val = std::strtol(yytext, nullptr, 0);
     
     if (errno == ERANGE) {
-        error("integer literal is too large to be represented in 'long' integer type");
+        error("integer literal is too large to be represented in 'long' integer type", line);
     } else {
         std::cout << "Literal long integer: " << val << '\n'; 
     }
@@ -266,7 +267,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     auto val = std::strtoul(yytext, nullptr, 0);
 
     if (errno == ERANGE) {
-        error("integer literal is too large to be represented in 'unsigned int' integer type");
+        error("integer literal is too large to be represented in 'unsigned int' integer type", line);
     } else {
         std::cout << "Literal unsigned integer: " << val << '\n'; 
     }
@@ -277,11 +278,11 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 }
 
 0[0-7]*[89][0-9]*       { 
-    error("invalid digit in octal constant"); 
+    error("invalid digit in octal constant", line); 
 }
 
 (0[xX][0-9A-Fa-f]*[G-Zg-z][0-9A-Fa-f]*)|0[xX] {
-    error("invalid digit in hex constant"); 
+    error("invalid digit in hex constant", line); 
 }
 
 \x22                    {
@@ -355,12 +356,12 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <STRING_C,CHAR_C,STRING_NS>\\.           { 
     std::string warning_str = "unknown escape sequence \\";
     warning_str += yytext[1];
-    warning(warning_str);
+    warning("unknown escape sequence \\" + yytext[1], line);
     string_buffer += yytext[1];
 }
 
 <STRING_C,CHAR_C,STRING_NS>\n            { 
-    error("EOL in string"); 
+    error("EOL in string", line); 
     line++;
     BEGIN(INITIAL);
 }
@@ -381,7 +382,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 <CHAR_C>\x27            {
     if (string_buffer.size() > 1) {
-        warning("multi-character character constant");
+        warning("multi-character character constant", line);
     }
 
     std::cout << "CChar literal: " << string_buffer[string_buffer.size() - 1] << '\n';
@@ -390,7 +391,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 }
 
 <STRING_C,CHAR_C,STRING_NS><<EOF>>       {
-    error("unclosed quote in string");
+    error("unclosed quote in string", line);
     BEGIN(INITIAL);
 }
 
@@ -400,7 +401,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <MULTILINE_COMMENT>\*+[^*/]+   { /* ignored */ }
 <MULTILINE_COMMENT>\*+         { /* ignored */ }
 <MULTILINE_COMMENT><<EOF>> { 
-    error("multiline comment was not closed"); 
+    error("multiline comment was not closed", line); 
     BEGIN(INITIAL);
 }
 
@@ -444,15 +445,15 @@ static std::optional<int> handle_integer(std::string text, int line) {
     if (auto r = try_parse([](const std::string& str) { return std::stoll(str, nullptr, 0); }, "long long integer"))
         return r;
 
-    error("integer literal is too large to be represented in any signed integer type");
+    error("integer literal is too large to be represented in any signed integer type", line);
     return std::nullopt;
 }
 
-static void error(const std::string &str) {
+static void error(const std::string &str, int line) {
     std::cerr << file_name << ":" << line << ":" << " error: " << str << '\0';
 }
 
-static void warning(const std::string &str) {
+static void warning(const std::string &str, int line) {
     std::cerr << file_name << ":" << line << ":" << " warning: " << str << '\0';
 }
 
