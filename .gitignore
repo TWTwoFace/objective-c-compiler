@@ -2,5 +2,6 @@
 *.h
 *.cpp
 *.exe
+*.vs
 result.txt
 errors.txt

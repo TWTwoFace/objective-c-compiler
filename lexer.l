@@ -285,28 +285,28 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     error("invalid digit in hex constant", line); 
 }
 
-\x22                    {
-    //"
+\"                    {
+    // "
     BEGIN(STRING_C);
     string_buffer.clear();
 }
 
-\@\x22                   {
+\@\"                   {
     // @"
     BEGIN(STRING_NS);
     string_buffer.clear();
 }
 
-\x27                    {
+\'                    {
     BEGIN(CHAR_C);
     string_buffer.clear();
 }
 
-<STRING_C,STRING_NS>[^\\\x22\n]+  {
+<STRING_C,STRING_NS>[^\\\"\n]+  {
     string_buffer += yytext;
 }
 
-<CHAR_C>[^\\\x27\n] { 
+<CHAR_C>[^\\\'\n] { 
     string_buffer += yytext;
 }
 
@@ -320,11 +320,11 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 <STRING_C,CHAR_C,STRING_NS>\\t           { string_buffer += '\t'; }
 <STRING_C,CHAR_C,STRING_NS>\\r           { string_buffer += '\r'; }
 <STRING_C,CHAR_C,STRING_NS>\\\\          { string_buffer += '\\'; }
-<STRING_C,CHAR_C,STRING_NS>\\\x22        { 
+<STRING_C,CHAR_C,STRING_NS>\\\"        { 
     // \"
     string_buffer += '"'; 
 }
-<STRING_C,CHAR_C,STRING_NS>\\\x27        { 
+<STRING_C,CHAR_C,STRING_NS>\\\'        { 
     // \'
     string_buffer += '\''; 
 }
@@ -366,7 +366,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     BEGIN(INITIAL);
 }
 
-<STRING_C,STRING_NS>\x22          {
+<STRING_C,STRING_NS>\"          {
     // "
     if (YY_START == STRING_C) {
         std::cout << ">>> CString literal:\n" << string_buffer << '\n';
@@ -380,7 +380,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     BEGIN(INITIAL);
 }
 
-<CHAR_C>\x27            {
+<CHAR_C>\'            {
     if (string_buffer.size() > 1) {
         warning("multi-character character constant", line);
     }
