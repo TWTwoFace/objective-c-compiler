@@ -2,14 +2,63 @@
 
 %}
 
-%token BOOL
-%token CHAR
-%token SHORT
-%token INT
-%token LONG
-%token FLOAT
-%token DOUBLE
+%token VOID CHAR INT FLOAT DOUBLE SHORT LONG BOOL_TYPE
+%token STRUCT UNION ENUM
+%token ID_TYPE CLASS SEL IMP
 
+%token INC
+%token DEC
+%token EQ
+%token NE
+%token LE
+%token GE
+%token AND
+%token OR
+%token SHL
+%token SHR
+%token ADD_ASSIGN
+%token SUB_ASSIGN
+%token MUL_ASSIGN
+%token DIV_ASSIGN
+%token MOD_ASSIGN
+%token OR_ASSIGN   
+%token XOR_ASSIGN  
+%token SHL_ASSIGN
+%token SHR_ASSIGN  
+%token ARROW
+
+%token SELF SUPER NIL NIL_CAP
+%token YES NO
+%token ONEWAY IN OUT INOUT BYCOPY BYREF
+
+%token AUTO BREAK CASE CONST CONTINUE DEFAULT DO ELSE EXTERN
+%token FOR GOTO IF INLINE REGISTER RETURN SIGNED SIZEOF 
+%token STATIC SWITCH TYPEDEF UNSIGNED VOLATILE WHILE
+
+%token AT_INTERFACE
+%token AT_IMPLEMENTATION
+%token AT_PROTOCOL
+%token AT_END
+%token AT_CLASS
+%token AT_PUBLIC
+%token AT_PROTECTED
+%token AT_PRIVATE
+%token AT_PACKAGE
+%token AT_PROPERTY
+%token AT_SYNTHESIZE
+%token AT_DYNAMIC
+%token AT_SELECTOR
+%token AT_ENCODE
+%token AT_TRY
+%token AT_CATCH
+%token AT_FINALLY
+%token AT_THROW
+%token AT_OPTIONAL
+%token AT_REQUIRED
+%token AT_SYNCHRONIZED
+%token AT_AUTORELEASEPOOL
+%token AT_IMPORT
+%token AT
 
 %%
 
