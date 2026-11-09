@@ -12,3 +12,13 @@
 
 
 %%
+
+type: BOOL
+    | CHAR
+    | SHORT
+    | INT
+    | LONG
+    | FLOAT
+    | DOUBLE
+    ;
+
