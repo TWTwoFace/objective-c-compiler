@@ -9,9 +9,9 @@
 %token INC
 %token DEC
 %token EQ
-%token NE
-%token LE
-%token GE
+%token NEQ
+%token LEQ
+%token GEQ
 %token AND
 %token OR
 %token SHL
