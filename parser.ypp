@@ -1,0 +1,14 @@
+%{
+
+%}
+
+%token BOOL
+%token CHAR
+%token SHORT
+%token INT
+%token LONG
+%token FLOAT
+%token DOUBLE
+
+
+%%
