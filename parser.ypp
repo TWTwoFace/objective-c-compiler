@@ -2,6 +2,16 @@
 
 %}
 
+%union {
+    int ival;
+    double dval;
+    std::string* sval;
+}
+
+%token <ival> INT_LITERAL CHAR_LITERAL
+%token <dval> FLOAT_LITERAL
+%token <sval> ID STRING_LITERAL
+
 %token VOID CHAR INT FLOAT DOUBLE SHORT LONG BOOL_TYPE
 %token STRUCT UNION ENUM
 %token ID_TYPE CLASS SEL IMP
