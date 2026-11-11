@@ -5,6 +5,7 @@
 #include <cstdio>     /* FILE, fopen, fclose */
 #include <cerrno>     /* errno, ERANGE */
 #include <optional>   /* std::optional */
+#include "parser.tab.h" 
 
 static std::string file_name;
 static void append_utf8(std::string &str, unsigned int code);
@@ -36,141 +37,150 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 %}
 
 
-"["                     { std::cout << "Punctuator: " << yytext << '\n'; }
-"]"                     { std::cout << "Punctuator: " << yytext << '\n'; }
-"{"                     { std::cout << "Punctuator: " << yytext << '\n'; }
-"}"                     { std::cout << "Punctuator: " << yytext << '\n'; }
-"("                     { std::cout << "Punctuator: " << yytext << '\n'; }
-")"                     { std::cout << "Punctuator: " << yytext << '\n'; }
+"["                     { return '['; }
+"]"                     { return ']'; }
+"{"                     { return '{'; }
+"}"                     { return '}'; }
+"("                     { return '('; }
+")"                     { return ')'; }
 
-","                     { std::cout << "Separator: " << yytext << '\n'; }
-":"                     { std::cout << "Separator: " << yytext << '\n'; }
-";"                     { std::cout << "Semicolon: " << yytext << '\n'; }
+","                     { return ','; }
+":"                     { return ':'; }
+";"                     { return ';'; }
 
-"+"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
-"-"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
-"*"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
-"/"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
-"%"                     { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
-"++"                    { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
-"--"                    { std::cout << "Operator (arithmetic): " << yytext << '\n'; }
 
-"=="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
-"!="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
-"<"                     { std::cout << "Operator (comparison): " << yytext << '\n'; }
-">"                     { std::cout << "Operator (comparison): " << yytext << '\n'; }
-"<="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
-">="                    { std::cout << "Operator (comparison): " << yytext << '\n'; }
+"+"                     { return '+'; }
+"-"                     { return '-'; }
+"*"                     { return '*'; }
+"/"                     { return '/'; }
+"%"                     { return '%'; }
+"++"                    { return INC; }
+"--"                    { return DEC; }
 
-"&&"                    { std::cout << "Operator (logical): " << yytext << '\n'; }
-"||"                    { std::cout << "Operator (logical): " << yytext << '\n'; }
-"!"                     { std::cout << "Operator (logical): " << yytext << '\n'; }
+"=="                    { return EQ; }
+"!="                    { return NEQ; }
+"<"                     { return '<'; }
+">"                     { return '>'; }
+"<="                    { return LEQ; }
+">="                    { return GEQ; }
 
-"&"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
-"|"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
-"^"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
-"~"                     { std::cout << "Operator (bitwise): " << yytext << '\n'; }
-"<<"                    { std::cout << "Operator (bitwise): " << yytext << '\n'; }
-">>"                    { std::cout << "Operator (bitwise): " << yytext << '\n'; }
+"&&"                    { return AND; }
+"||"                    { return OR; }
+"!"                     { return '!'; }
 
-"+="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"="                     { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"-="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"*="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"/="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"%="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"&="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"|="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"^="                    { std::cout << "Operator (assignment): " << yytext << '\n'; }
-"<<="                   { std::cout << "Operator (assignment): " << yytext << '\n'; }
-">>="                   { std::cout << "Operator (assignment): " << yytext << '\n'; }
+"&"                     { return '&'; }
+"|"                     { return '|'; }
+"^"                     { return '^'; }
+"~"                     { return '~'; }
+"<<"                    { return SHL; }
+">>"                    { return SHR; }
 
-"."                     { std::cout << "Operator (member): " << yytext << '\n'; }
-"->"                    { std::cout << "Operator (member): " << yytext << '\n'; }
+"+="                    { return ADD_ASSIGN; }
+"="                     { return '='; }
+"-="                    { return SUB_ASSIGN; }
+"*="                    { return MUL_ASSIGN; }
+"/="                    { return DIV_ASSIGN; }
+"%="                    { return MOD_ASSIGN; }
+"&="                    { return AND_ASSIGN; }
+"|="                    { return OR_ASSIGN; }
+"^="                    { return XOR_ASSIGN; }
+"<<="                   { return SHL_ASSIGN; }
+">>="                   { return SHR_ASSIGN; }
 
-"?"                     { std::cout << "Operator: " << yytext << '\n'; }
+"."                     { return '.'; }
+"->"                    { return ARROW; }
 
-"self"                  { std::cout << "Object constant: " << yytext << '\n'; }
-"super"                 { std::cout << "Object constant: " << yytext << '\n'; }
-"nil"                   { std::cout << "Object constant: " << yytext << '\n'; }
-"Nil"                   { std::cout << "Object constant: " << yytext << '\n'; }
+"?"                     { return '?'; }
 
-"YES"                   { std::cout << "Boolean literal: " << yytext << '\n'; }
-"NO"                    { std::cout << "Boolean literal: " << yytext << '\n'; }
 
-"oneway"                { std::cout << "Qualifier: " << yytext << '\n'; }
-"in"                    { std::cout << "Qualifier: " << yytext << '\n'; }
-"out"                   { std::cout << "Qualifier: " << yytext << '\n'; }
-"inout"                 { std::cout << "Qualifier: " << yytext << '\n'; }
-"bycopy"                { std::cout << "Qualifier: " << yytext << '\n'; }
-"byref"                 { std::cout << "Qualifier: " << yytext << '\n'; }
+"self"                  { return SELF; }
+"super"                 { return SUPER; }
+"nil"                   { return NIL; }
+"Nil"                   { return NIL_CAP; }
 
-"auto"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"break"                 { std::cout << "Keyword: "     << yytext << '\n'; }
-"case"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"const"                 { std::cout << "Keyword: "     << yytext << '\n'; }
-"continue"              { std::cout << "Keyword: "     << yytext << '\n'; }
-"default"               { std::cout << "Keyword: "     << yytext << '\n'; }
-"do"                    { std::cout << "Keyword: "     << yytext << '\n'; }
-"else"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"extern"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"for"                   { std::cout << "Keyword: "     << yytext << '\n'; }
-"goto"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"if"                    { std::cout << "Keyword: "     << yytext << '\n'; }
-"inline"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"register"              { std::cout << "Keyword: "     << yytext << '\n'; }
-"return"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"signed"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"sizeof"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"static"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"switch"                { std::cout << "Keyword: "     << yytext << '\n'; }
-"typedef"               { std::cout << "Keyword: "     << yytext << '\n'; }
-"unsigned"              { std::cout << "Keyword: "     << yytext << '\n'; }
-"void"                  { std::cout << "Keyword: "     << yytext << '\n'; }
-"volatile"              { std::cout << "Keyword: "     << yytext << '\n'; }
-"while"                 { std::cout << "Keyword: "     << yytext << '\n'; }
-"enum"                  { std::cout << "Keyword: "     << yytext << '\n'; }
+"YES"                   { return YES; }
+"NO"                    { return NO; }
 
-"char"                  { std::cout << "Data type: "     << yytext << '\n'; }
-"double"                { std::cout << "Data type: "     << yytext << '\n'; }
-"float"                 { std::cout << "Data type: "     << yytext << '\n'; }
-"int"                   { std::cout << "Data type: "     << yytext << '\n'; }
-"long"                  { std::cout << "Data type: "     << yytext << '\n'; }
-"short"                 { std::cout << "Data type: "     << yytext << '\n'; }
-"BOOL"                  { std::cout << "Data type: "     << yytext << '\n'; }
-"struct"                { std::cout << "Data type: "     << yytext << '\n'; }
-"union"                 { std::cout << "Data type: "     << yytext << '\n'; }
-"id"                    { std::cout << "Data type: "     << yytext << '\n'; }
-"Class"                 { std::cout << "Data type: "     << yytext << '\n'; }
-"SEL"                   { std::cout << "Data type: "     << yytext << '\n'; }
-"IMP"                   { std::cout << "Data type: "     << yytext << '\n'; }
 
-"@interface"            { std::cout << "Directive: " << yytext << '\n'; }
-"@implementation"       { std::cout << "Directive: " << yytext << '\n'; }
-"@protocol"             { std::cout << "Directive: " << yytext << '\n'; }
-"@end"                  { std::cout << "Directive: " << yytext << '\n'; }
-"@class"                { std::cout << "Directive: " << yytext << '\n'; }
-"@public"               { std::cout << "Directive: " << yytext << '\n'; }
-"@protected"            { std::cout << "Directive: " << yytext << '\n'; }
-"@private"              { std::cout << "Directive: " << yytext << '\n'; }
-"@package"              { std::cout << "Directive: " << yytext << '\n'; }
-"@property"             { std::cout << "Directive: " << yytext << '\n'; }
-"@synthesize"           { std::cout << "Directive: " << yytext << '\n'; }
-"@dynamic"              { std::cout << "Directive: " << yytext << '\n'; }
-"@selector"             { std::cout << "Directive: " << yytext << '\n'; }
-"@encode"               { std::cout << "Directive: " << yytext << '\n'; }
-"@try"                  { std::cout << "Directive: " << yytext << '\n'; }
-"@catch"                { std::cout << "Directive: " << yytext << '\n'; }
-"@finally"              { std::cout << "Directive: " << yytext << '\n'; }
-"@throw"                { std::cout << "Directive: " << yytext << '\n'; }
-"@optional"             { std::cout << "Directive: " << yytext << '\n'; }
-"@required"             { std::cout << "Directive: " << yytext << '\n'; }
-"@synchronized"         { std::cout << "Directive: " << yytext << '\n'; }
-"@autoreleasepool"      { std::cout << "Directive: " << yytext << '\n'; }
-"@import"               { std::cout << "Directive: " << yytext << '\n'; }
-"@"                     { std::cout << "Directive at: " << yytext << '\n'; }
+"oneway"                { return ONEWAY; }
+"in"                    { return IN; }
+"out"                   { return OUT; }
+"inout"                 { return INOUT; }
+"bycopy"                { return BYCOPY; }
+"byref"                 { return BYREF; }
 
-[A-Za-z_][A-Za-z0-9_]*  { std::cout << "ID: " << yytext << '\n'; }
+
+"auto"                  { return AUTO; }
+"break"                 { return BREAK; }
+"case"                  { return CASE; }
+"const"                 { return CONST; }
+"continue"              { return CONTINUE; }
+"default"               { return DEFAULT; }
+"do"                    { return DO; }
+"else"                  { return ELSE; }
+"extern"                { return EXTERN; }
+"for"                   { return FOR; }
+"goto"                  { return GOTO; }
+"if"                    { return IF; }
+"inline"                { return INLINE; }
+"register"              { return REGISTER; }
+"return"                { return RETURN; }
+"signed"                { return SIGNED; }
+"sizeof"                { return SIZEOF; }
+"static"                { return STATIC; }
+"switch"                { return SWITCH; }
+"typedef"               { return TYPEDEF; }
+"unsigned"              { return UNSIGNED; }
+"void"                  { return VOID; }
+"volatile"              { return VOLATILE; }
+"while"                 { return WHILE; }
+"enum"                  { return ENUM; }
+
+
+"char"                  { return CHAR; }
+"double"                { return DOUBLE; }
+"float"                 { return FLOAT; }
+"int"                   { return INT; }
+"long"                  { return LONG; }
+"short"                 { return SHORT; }
+"BOOL"                  { return BOOL_TYPE; }
+"struct"                { return STRUCT; }
+"union"                 { return UNION; }
+"id"                    { return ID_TYPE; }
+"Class"                 { return CLASS; }
+"SEL"                   { return SEL; }
+"IMP"                   { return IMP; }
+
+
+"@interface"            { return AT_INTERFACE; }
+"@implementation"       { return AT_IMPLEMENTATION; }
+"@protocol"             { return AT_PROTOCOL; }
+"@end"                  { return AT_END; }
+"@class"                { return AT_CLASS; }
+"@public"               { return AT_PUBLIC; }
+"@protected"            { return AT_PROTECTED; }
+"@private"              { return AT_PRIVATE; }
+"@package"              { return AT_PACKAGE; }
+"@property"             { return AT_PROPERTY; }
+"@synthesize"           { return AT_SYNTHESIZE; }
+"@dynamic"              { return AT_DYNAMIC; }
+"@selector"             { return AT_SELECTOR; }
+"@encode"               { return AT_ENCODE; }
+"@try"                  { return AT_TRY; }
+"@catch"                { return AT_CATCH; }
+"@finally"              { return AT_FINALLY; }
+"@throw"                { return AT_THROW; }
+"@optional"             { return AT_OPTIONAL; }
+"@required"             { return AT_REQUIRED; }
+"@synchronized"         { return AT_SYNCHRONIZED; }
+"@autoreleasepool"      { return AT_AUTORELEASEPOOL; }
+"@import"               { return AT_IMPORT; }
+"@"                     { return AT; }
+
+[A-Za-z_][A-Za-z0-9_]*  { 
+    yylval.sval = new std::string(yytext);
+    return ID; 
+}
 
 
 {FLOATING_NUM}[lL]      { 
@@ -183,7 +193,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
         warning("magnitude of floating-point constant too large for type 'long double'", line);
     }
 
-    std::cout << "Long double literal: " << value << '\n'; 
+    yylval.dval = value;
+    return FLOAT_LITERAL;
 }
 
 {FLOATING_NUM}[fF]      { 
@@ -196,7 +207,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
         warning("magnitude of floating-point constant too large for type 'float'", line);
     }
 
-    std::cout << "Float literal: " << value << '\n'; 
+    yylval.dval = value;
+    return FLOAT_LITERAL;
 }
 
 {FLOATING_NUM}         {
@@ -209,7 +221,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
         warning("magnitude of floating-point constant too large for type 'double'", line);
     }
 
-    std::cout << "Double literal: " << value << '\n';
+    yylval.dval = value;
+    return FLOAT_LITERAL;
 }
 
 {INTEGER_NUM}([uU][lL]{2}|[lL]{2}[uU])     { 
@@ -220,7 +233,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in any integer type", line);
     } else {
-        std::cout << "Literal unsigned long long integer: " << val << '\n'; 
+        yylval.ival = val.value();
+        return INT_LITERAL; 
     }
 }
 
@@ -233,7 +247,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'unsigned long' integer type", line);
     } else {
-        std::cout << "Literal unsigned long integer: " << val << '\n'; 
+        yylval.ival = val.value();
+        return INT_LITERAL; 
     }
 }
 
@@ -245,7 +260,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'long long' integer type", line);
     } else {
-        std::cout << "Literal long long integer: " << val << '\n'; 
+        yylval.ival = val.value();
+        return INT_LITERAL;  
     }
 }
 
@@ -257,7 +273,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'long' integer type", line);
     } else {
-        std::cout << "Literal long integer: " << val << '\n'; 
+        yylval.ival = val.value();
+        return INT_LITERAL;  
     }
 }
 
@@ -269,12 +286,16 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'unsigned int' integer type", line);
     } else {
-        std::cout << "Literal unsigned integer: " << val << '\n'; 
+        yylval.ival = val.value();
+        return INT_LITERAL;  
     }
 }
 
 {INTEGER_NUM}          { 
-    handle_integer(yytext, line);
+    auto val = handle_integer(yytext, line);
+    
+    yylval.ival = val.value();
+    return INT_LITERAL;
 }
 
 0[0-7]*[89][0-9]*       { 
@@ -368,26 +389,19 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 
 <STRING_C,STRING_NS>\"          {
     // "
-    if (YY_START == STRING_C) {
-        std::cout << ">>> CString literal:\n" << string_buffer << '\n';
-        std::cout << "<<< CString ended" << '\n';
-    }
-    else if (YY_START == STRING_NS) {
-        std::cout << ">>> NSString literal:\n" << string_buffer << '\n';
-        std::cout << "<<< NSString ended" << '\n';
-    }
-    
+    yylval.sval = new std::string(string_buffer);
     BEGIN(INITIAL);
+    return STRING_LITERAL;
 }
 
 <CHAR_C>\'            {
     if (string_buffer.size() > 1) {
         warning("multi-character character constant", line);
     }
-
-    std::cout << "CChar literal: " << string_buffer[string_buffer.size() - 1] << '\n';
-    
+ 
+    yylval.ival = string_buffer.empty() ? 0 : string_buffer[0];
     BEGIN(INITIAL);
+    return CHAR_LITERAL;
 }
 
 <STRING_C,CHAR_C,STRING_NS><<EOF>>       {

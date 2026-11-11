@@ -32,6 +32,7 @@
 %token MUL_ASSIGN
 %token DIV_ASSIGN
 %token MOD_ASSIGN
+%token AND_ASSIGN
 %token OR_ASSIGN   
 %token XOR_ASSIGN  
 %token SHL_ASSIGN
