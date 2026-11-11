@@ -233,7 +233,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in any integer type", line);
     } else {
-        yylval.ival = val.value();
+        yylval.ival = val;
         return INT_LITERAL; 
     }
 }
@@ -247,7 +247,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'unsigned long' integer type", line);
     } else {
-        yylval.ival = val.value();
+        yylval.ival = val;
         return INT_LITERAL; 
     }
 }
@@ -260,7 +260,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'long long' integer type", line);
     } else {
-        yylval.ival = val.value();
+        yylval.ival = val;
         return INT_LITERAL;  
     }
 }
@@ -273,7 +273,7 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'long' integer type", line);
     } else {
-        yylval.ival = val.value();
+        yylval.ival = val;
         return INT_LITERAL;  
     }
 }
@@ -286,15 +286,13 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
     if (errno == ERANGE) {
         error("integer literal is too large to be represented in 'unsigned int' integer type", line);
     } else {
-        yylval.ival = val.value();
+        yylval.ival = val;
         return INT_LITERAL;  
     }
 }
 
 {INTEGER_NUM}          { 
-    auto val = handle_integer(yytext, line);
-    
-    yylval.ival = val.value();
+    yylval.ival = handle_integer(yytext, line).value_or(0);
     return INT_LITERAL;
 }
 
@@ -469,28 +467,4 @@ static void error(const std::string &str, int line) {
 
 static void warning(const std::string &str, int line) {
     std::cerr << file_name << ":" << line << ":" << " warning: " << str << '\0';
-}
-
-int main(int argc, char* argv[]) {
-    extern FILE* yyin; 
-
-    if (argc < 2)
-    {
-        std::cerr << "Missing command line argument (source file path)\n";
-        return 1;
-    } 
-    
-    yyin = fopen(argv[1], "r"); 
-
-    if (!yyin) {
-        std::cout << "File was not found!\n";
-        return 1;
-    }
-
-    file_name = argv[1];
-
-    yylex(); 
-
-    fclose(yyin);
-    return 0;
 }
