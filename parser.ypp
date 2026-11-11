@@ -6,6 +6,7 @@
 %token STRUCT UNION ENUM
 %token ID_TYPE CLASS SEL IMP
 
+%token UMINUS
 %token INC
 %token DEC
 %token EQ
@@ -60,9 +61,24 @@
 %token AT_IMPORT
 %token AT
 
+%right '=' ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN 
+        AND_ASSIGN OR_ASSIGN XOR_ASSIGN SHL_ASSIGN SHR_ASSIGN
+%right '?' ':'
+%left OR
+%left AND
+%left '|'
+%left '^'
+%left '&'
+%nonassoc EQ NEQ
+%nonassoc '<' '>' LEQ GEQ
+%left SHL SHR
+%left '+' '-'
+%left '*' '/' '%'
+%right '!' '~' INC DEC UMINUS
+
 %%
 
-type: BOOL
+type: BOOL_TYPE
     | CHAR
     | SHORT
     | INT
@@ -71,3 +87,65 @@ type: BOOL
     | DOUBLE
     ;
 
+expr: INT_LITERAL
+    | FLOAT_LITERAL
+    | STRING_LITERAL
+    | ID
+    | YES
+    | NO
+    | SELF
+    | SUPER
+    | NIL
+    | NIL_CAP
+    | '(' expr ')'
+    | expr '+' expr
+    | expr '-' expr
+    | expr '*' expr
+    | expr '/' expr
+    | expr '%' expr
+    | expr EQ expr
+    | expr NEQ expr
+    | expr '<' expr
+    | expr '>' expr
+    | expr LEQ expr
+    | expr GEQ expr
+    | expr AND expr
+    | expr OR expr
+    | expr '&' expr
+    | expr '|' expr
+    | expr '^' expr
+    | expr SHL expr
+    | expr SHR expr
+    | expr '=' expr
+    | expr ADD_ASSIGN expr
+    | expr SUB_ASSIGN expr
+    | expr MUL_ASSIGN expr
+    | expr DIV_ASSIGN expr
+    | expr MOD_ASSIGN expr
+    | expr AND_ASSIGN expr
+    | expr OR_ASSIGN expr
+    | expr XOR_ASSIGN expr
+    | expr SHL_ASSIGN expr
+    | expr SHR_ASSIGN expr
+    | expr '?' expr ':' expr
+    | '-' expr %prec UMINUS
+    | '+' expr %prec UMINUS
+    | '!' expr
+    | '~' expr
+    | INC expr
+    | DEC expr
+    | expr INC
+    | expr DEC
+    | expr '.' ID    
+    | expr ARROW ID
+    | expr '[' expr ']'
+    | ID '(' expr_list ')'
+    ;
+
+expr_list: expr
+         | expr_list ',' expr
+         ;
+
+expr_list_empty: /*empty*/
+               | expr_list
+               ;
