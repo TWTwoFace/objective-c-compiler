@@ -169,6 +169,16 @@ expr_list_empty: /*empty*/
                | expr_list
                ;
 
+enum_decl: ENUM ID '{' enum_list '}' ';'
+    ;
+
+enum_item: ID
+         | ID '=' expr
+         ;
+
+enum_list: enum_item
+         | enum_list ',' enum_item
+         ;
 %%
 
 void yyerror(const char* s) {
