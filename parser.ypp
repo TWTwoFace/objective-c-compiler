@@ -161,6 +161,18 @@ expr: INT_LITERAL
     | ID '(' expr_list_empty ')'
     ;
 
+array_dim: '[' expr ']'
+         |  '[' ']'
+         ;
+
+dimension_list: array_dim
+          | dimension_list array_dim
+          ;
+
+array_decl: type ID dimension_list ';'
+          | type ID dimension_list '=' '{' expr_list_empty '}' ';'
+          ;
+
 expr_list: expr
          | expr_list ',' expr
          ;
