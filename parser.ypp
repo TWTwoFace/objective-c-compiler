@@ -191,6 +191,11 @@ enum_item: ID
 enum_list: enum_item
          | enum_list ',' enum_item
          ;
+
+while_stmt: WHILE '(' expr ')' stmt ;
+
+do_while_stmt: DO stmt WHILE '(' expr ')' ';'
+             ;
 %%
 
 void yyerror(const char* s) {
