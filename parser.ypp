@@ -196,6 +196,22 @@ while_stmt: WHILE '(' expr ')' stmt ;
 
 do_while_stmt: DO stmt WHILE '(' expr ')' ';'
              ;
+
+for_init: /*empty*/
+        | expr
+        | type ID '=' expr
+        ;
+
+for_cond: /*empty*/
+        | expr
+        ;
+
+for_inc: /*empty*/
+       | expr\
+       ;
+
+for_stmt: FOR '(' for_init ';' for_cond ';' for_inc ')' stmt
+
 %%
 
 void yyerror(const char* s) {
