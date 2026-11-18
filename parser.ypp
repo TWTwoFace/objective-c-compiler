@@ -168,7 +168,8 @@ dimension_list: array_dim
           ;
 
 array_decl: type ID dimension_list ';'
-          | type ID dimension_list '=' '{' expr_list_empty '}' ';' //можно ли для инициализации массива использовать функцию?
+          | type ID dimension_list '=' '{' expr_list_empty '}' ';'
+          | type ID dimension_list '=' STRING_LITERAL ';'
           ;
 
 expr_list: expr
@@ -205,10 +206,11 @@ for_cond: /*empty*/
         ;
 
 for_inc: /*empty*/
-       | expr\
+       | expr
        ;
 
 for_stmt: FOR '(' for_init ';' for_cond ';' for_inc ')' stmt
+       ;
 
 %%
 
