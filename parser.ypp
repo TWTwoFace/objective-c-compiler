@@ -85,8 +85,8 @@ void yyerror(const char* s);
 %left '|'
 %left '^'
 %left '&'
-%nonassoc EQ NEQ
-%nonassoc '<' '>' LEQ GEQ
+%left EQ NEQ
+%left '<' '>' LEQ GEQ
 %left SHL SHR
 %left '+' '-'
 %left '*' '/' '%'
@@ -108,7 +108,7 @@ type: BOOL_TYPE
 
 expr: INT_LITERAL
     | FLOAT_LITERAL
-    | STRING_LITERAL
+    | STRING_LITERAL //bool literal?
     | ID
     | YES
     | NO
@@ -156,7 +156,7 @@ expr: INT_LITERAL
     | expr INC
     | expr DEC
     | expr '.' ID    
-    | expr ARROW ID
+    | expr ARROW ID //такие же как в cpp? будем ли поддерживать?
     | expr '[' expr ']'
     | ID '(' expr_list_empty ')'
     ;
@@ -170,7 +170,7 @@ dimension_list: array_dim
           ;
 
 array_decl: type ID dimension_list ';'
-          | type ID dimension_list '=' '{' expr_list_empty '}' ';'
+          | type ID dimension_list '=' '{' expr_list_empty '}' ';' //можно ли для инициализации массива использовать функцию?
           ;
 
 expr_list: expr
