@@ -13,7 +13,7 @@ void yyerror(const char* s);
     std::string* sval;
 }
 
-%token <ival> INT_LITERAL CHAR_LITERAL
+%token <ival> INT_LITERAL CHAR_LITERAL BOOL_LITERAL
 %token <dval> FLOAT_LITERAL
 %token <sval> ID STRING_LITERAL
 
@@ -45,7 +45,6 @@ void yyerror(const char* s);
 %token ARROW
 
 %token SELF SUPER NIL NIL_CAP
-%token YES NO
 %token ONEWAY IN OUT INOUT BYCOPY BYREF
 
 %token AUTO BREAK CASE CONST CONTINUE DEFAULT DO ELSE EXTERN
@@ -108,10 +107,9 @@ type: BOOL_TYPE
 
 expr: INT_LITERAL
     | FLOAT_LITERAL
-    | STRING_LITERAL //bool literal?
+    | STRING_LITERAL
+    | BOOL_LITERAL
     | ID
-    | YES
-    | NO
     | SELF
     | SUPER
     | NIL

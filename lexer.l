@@ -98,8 +98,8 @@ INTEGER_NUM (0[0-7]*)|([1-9][0-9]*)|((0x|0X)[0-9A-Fa-f]+)
 "nil"                   { return NIL; }
 "Nil"                   { return NIL_CAP; }
 
-"YES"                   { return YES; }
-"NO"                    { return NO; }
+"YES" { yylval.ival = 1; return BOOL_LITERAL; }
+"NO"  { yylval.ival = 0; return BOOL_LITERAL; }
 
 
 "oneway"                { return ONEWAY; }
